@@ -26,7 +26,7 @@
       <n-scrollbar class="book-scrollbar">
         <n-empty v-if="bookList.length === 0" class="empty" description="还没有导入书籍哦">
           <template #extra>
-            <n-button size="small" type="primary" round>立即导入</n-button>
+            <n-button size="small" type="primary" round @click="importBook">立即导入</n-button>
           </template>
         </n-empty>
       </n-scrollbar>
@@ -35,6 +35,7 @@
 </template>
 
 <script setup lang="ts">
+import { open } from "@tauri-apps/plugin-dialog"
 import { BookSearch24Regular } from "@vicons/fluent"
 import { SettingOutlined } from "@vicons/antd"
 
@@ -45,6 +46,14 @@ const searchValue = ref("")
 
 const goSettingView = () => {
   router.push({ name: "Setting" })
+}
+
+const importBook = async () => {
+  const filePath = await open({
+    multiple: false,
+    filters: [{ name: "TXT", extensions: ["txt", "epub"]}]
+  })
+  console.log(filePath)
 }
 </script>
 

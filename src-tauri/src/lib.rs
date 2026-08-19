@@ -10,6 +10,7 @@ use services::db::init_pool;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let pool = tauri::async_runtime::block_on(async {
                 init_pool().await.expect("sqlite数据库连接池初始化失败!")
