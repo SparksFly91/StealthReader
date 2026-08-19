@@ -1,0 +1,83 @@
+name: 'Publish Release'
+
+on:
+  push:
+    tags:
+      - 'v*'           # 推送 v1.0.0 之类的 tag 时触发
+  workflow_dispatch:    # 也支持手动触发
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write   # 需要写入权限来创建 Release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS Apple Silicon (M1/M2/M3)
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+          
+          # macOS Intel
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+          
+          # Linux x64
+          - platform: 'ubuntu-22.04'
+            args: ''
+          
+          # Linux ARM64（仅公开仓库可用）
+          - platform: 'ubuntu-22.04-arm'
+            args: ''
+          
+          # Windows x64
+          - platform: 'windows-latest'
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      # 1. 检出代码
+      - uses: actions/checkout@v4
+
+      # 2. 安装 Linux 系统依赖（仅 Ubuntu）
+      - name: Install dependencies (Ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' || matrix.platform == 'ubuntu-22.04-arm'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
+
+      # 3. 安装 Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'    # 或 yarn / pnpm
+
+      # 4. 安装 Rust
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      # 5. Rust 缓存（大幅加速后续构建）
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      # 6. 安装前端依赖
+      - name: Install frontend dependencies
+        run: npm install
+
+      # 7. 构建并发布（核心步骤）
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__              # 自动替换为 tauri.conf.json 里的版本号
+          releaseName: 'App v__VERSION__'
+          releaseBody: 'See the assets to download and install.'
+          releaseDraft: true                 # 先创建草稿，手动确认后再发布
+          prerelease: false
+          args: ${{ matrix.args }}

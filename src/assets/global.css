@@ -1,0 +1,31 @@
+/* 主题变量定义（后续主题功能通过 [data-theme="dark"] 覆盖同名变量即可） */
+:root {
+  /* 窗口与页面背景 */
+  --color-window-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-hover: #fafafa;
+
+  /* 文字 */
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: #6e6e73;
+  --color-text-invert: #ffffff;
+
+  /* 边框与阴影 */
+  --color-border: rgba(0, 0, 0, 0.06);
+  --color-border-hover: rgba(102, 126, 234, 0.3);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 10px 28px rgba(0, 0, 0, 0.08);
+  --shadow-focus: 0 4px 16px rgba(102, 126, 234, 0.18);
+
+  /* 品牌渐变 */
+  --color-accent: #667eea;
+  --color-accent-2: #764ba2;
+  --color-accent-gradient: linear-gradient(135deg, #667eea, #764ba2);
+
+  /* 圆角 */
+  --radius-card: 16px;
+  --radius-sm: 10px;
+
+  /* 尺寸 */
+  --titlebar-height: 38px;
+}
