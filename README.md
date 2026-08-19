@@ -1,7 +1,99 @@
-# Tauri + Vue + TypeScript
+# 幽灵阅读器 · Stealth Reader
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+一款永远浮在屏幕角落、能一键隐身、看起来像系统通知的本地小说阅读器。
 
-## Recommended IDE Setup
+核心不是「读小说」，而是「安全地读小说」——解决职场场景下「想摸鱼但怕被发现」的焦虑。
 
-- [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## 定位
+
+桌面端本地小说阅读器，核心卖点是「职场隐身模式」。
+
+- 目标平台：Windows / macOS / Linux（基于 Tauri 跨平台）
+- 核心价值：轻量 + 本地 + 隐蔽
+
+## 特性
+
+- **本地导入**：支持 TXT 导入，自动检测 GBK / UTF-8 编码
+- **自动分章**：正则识别「第 X 章」等常见格式，自动拆分章节
+- **分页阅读**：按键翻页（↑↓ / PgUp / PgDn），无滚动条，像读实体书
+- **阅读进度持久化**：自动保存进度，下次打开继续读
+- **老板键**：系统级全局快捷键，一键瞬间隐身，任务栏无图标
+- **幽灵模式**：窗口透明 + 鼠标穿透 + 置顶，真正融入桌面
+- **系统托盘**：支持伪装图标，静默驻留后台
+- **零打扰**：无账号、无广告、无在线同步，纯本地
+
+## 四种预设模式
+
+| 模式 | 尺寸 | 透明度 | 鼠标穿透 | 交互 | 适用场景 |
+|------|------|--------|---------|------|---------|
+| 专注模式 | 600×400 | 100% | 关闭 | 完整交互 | 午休 / 独处 |
+| 幽灵模式 | 300×150 | 30% | 开启 | 无（纯看） | 边工作边偷看 |
+| 隐身模式 | 隐藏 | 0% | - | 无 | 老板来了 |
+| 迷你模式 | 200×100 | 50% | 可选 | 仅翻页 | 会议中 |
+
+## 技术栈
+
+- [Tauri 2](https://tauri.app/) — 跨平台桌面壳与窗口级 API
+- [Vue 3](https://vuejs.org/) + TypeScript + Vite
+- [Naive UI](https://www.naiveui.com/) — 组件库
+- [Pinia](https://pinia.vuejs.org/) — 状态管理（persistedstate 持久化）
+- Rust — 后端能力（编码检测、全局快捷键、系统托盘等）
+
+## 快速开始
+
+### 环境要求
+
+- [Node.js](https://nodejs.org/)（18+）与 [pnpm](https://pnpm.io/)
+- [Rust](https://www.rust-lang.org/) 工具链
+- Tauri 各平台系统依赖（参考 [Tauri 官方文档](https://tauri.app/start/prerequisites/)）
+
+### 安装与运行
+
+```bash
+pnpm install        # 安装依赖
+pnpm tauri dev      # 开发模式启动
+pnpm tauri build    # 构建安装包
+```
+
+仅调试前端界面：
+
+```bash
+pnpm dev            # 启动 Vite 开发服务器（http://localhost:1420）
+pnpm build          # 类型检查 + 构建前端产物
+```
+
+## 路线图
+
+### v0.1.0（MVP）
+
+- TXT 导入 + 编码自动检测
+- 书架列表 + 删除
+- 分页阅读 + 字体 / 行距设置
+- 老板键（显隐）
+- 窗口置顶 + 透明度调节
+- 阅读进度保存
+
+### v1.0.0
+
+- 幽灵模式（鼠标穿透 + 悬停切换）
+- 系统托盘 + 伪装图标
+- 设置面板
+- 窗口尺寸记忆
+- 安装包（Windows .msi / macOS .dmg）
+
+### v1.1.0
+
+- EPUB 导入支持
+- 章节手动跳转
+- 阅读时长统计
+- 主题切换（IDE 伪装主题）
+
+### v2.0（未来）
+
+- 多设备进度同步（WebDAV / 局域网）
+- 语音朗读（TTS）
+- 书摘 / 笔记
+
+## 免责声明
+
+本项目仅支持本地文件导入，不内置任何在线书源或下载功能。请尊重版权，仅使用您拥有合法权利的书籍内容。

@@ -30,6 +30,7 @@ const routes = [
         path: "/setting",
         name: "Setting",
         component: () => import("@/views/Setting.vue"),
+        redirect: "/setting/appearance",
         meta: {
           isCache: true,
           title: "设置",
@@ -42,6 +43,24 @@ const routes = [
             meta: {
               isCache: true,
               title: "外观设置",
+            },
+          },
+          {
+            path: "/setting/shortcut",
+            name: "Shortcut",
+            component: () => import("@/views/setting/Shortcut.vue"),
+            meta: {
+              isCache: true,
+              title: "快捷键",
+            },
+          },
+          {
+            path: "/setting/about",
+            name: "About",
+            component: () => import("@/views/setting/About.vue"),
+            meta: {
+              isCache: true,
+              title: "关于",
             },
           },
         ],
