@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BookCover: typeof import('./../components/BookCover.vue')['default']
+    GlobalLoading: typeof import('./../components/GlobalLoading.vue')['default']
     NAnchor: typeof import('naive-ui')['NAnchor']
     NAnchorLink: typeof import('naive-ui')['NAnchorLink']
     NButton: typeof import('naive-ui')['NButton']

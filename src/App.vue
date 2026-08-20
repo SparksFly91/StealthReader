@@ -3,6 +3,7 @@
     <n-message-provider>
       <n-notification-provider>
         <n-dialog-provider>
+          <GlobalLoading />
           <RouterView />
         </n-dialog-provider>
       </n-notification-provider>
@@ -12,6 +13,7 @@
 
 <script setup lang="ts">
 import { zhCN, dateZhCN } from "naive-ui"
+import GlobalLoading from "@/components/GlobalLoading.vue"
 </script>
 
 <style scoped>

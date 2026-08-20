@@ -180,3 +180,48 @@ pub async fn chapter_page(
         page_size: limit,
     }))
 }
+
+/**
+ * 获取书籍章节详情
+ * @param id 章节ID
+ * @returns 章节详情
+ */
+#[tauri::command]
+#[auto_collect_command]
+pub async fn chapter_detail(
+    pool: State<'_, SqlitePool>,
+    id: i64,
+) -> Result<ApiResponse<Chapters>, String> {
+    let chapter = sqlx::query_as::<_, Chapters>("SELECT * FROM chapters WHERE id = ?")
+        .bind(id)
+        .fetch_one(&*pool)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(ApiResponse::success(chapter))
+}
+
+/**
+ * 获取相邻章节
+ * @param book_id 书籍ID
+ * @param number 当前章节号
+ * @param offset 偏移量（-1 上一章，1 下一章）
+ * @returns 相邻章节，不存在则为 null
+ */
+#[tauri::command]
+#[auto_collect_command]
+pub async fn chapter_nav(
+    pool: State<'_, SqlitePool>,
+    book_id: i64,
+    number: i32,
+    offset: i32,
+) -> Result<ApiResponse<Option<Chapters>>, String> {
+    let chapter = sqlx::query_as::<_, Chapters>(
+        "SELECT * FROM chapters WHERE book_id = ? AND number = ?",
+    )
+    .bind(book_id)
+    .bind(number + offset)
+    .fetch_optional(&*pool)
+    .await
+    .map_err(|e| e.to_string())?;
+    Ok(ApiResponse::success(chapter))
+}

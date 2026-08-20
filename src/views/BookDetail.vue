@@ -52,7 +52,7 @@
             responsive="screen"
           >
             <n-gi v-for="ch in chapterList" :key="ch.id">
-              <div class="chapter-item">
+              <div class="chapter-item" @click="readChapter(ch)">
                 <span class="chapter-index">{{ ch.number }}</span>
                 <span class="chapter-title" :title="ch.title">{{ ch.title }}</span>
                 <span class="chapter-chars">{{ ch.total_chars }} 字</span>
@@ -85,16 +85,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
 import { ArrowLeftOutlined } from "@vicons/antd"
 import dayjs from "dayjs"
 import BookApi from "@/api/book"
 import BookCover from "@/components/BookCover.vue"
+import { useLoading } from "@/hooks/useLoading"
 import type { Books, Chapters } from "@/types/global"
 
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
+const { withLoading } = useLoading()
 
 const bookId = computed(() => Number(route.query.id) || 0)
 
@@ -106,6 +107,10 @@ const limit = ref(50)
 const loadingChapters = ref(false)
 
 const goBack = () => router.back()
+
+const readChapter = (ch: Chapters) => {
+  router.push({ name: "Reader", query: { id: ch.id } })
+}
 
 const readProgress = computed(() => {
   const b = book.value
@@ -128,7 +133,7 @@ const formatTime = (t?: string | null) => {
 
 const loadBook = async () => {
   if (!bookId.value) return
-  const res = await BookApi.detail(bookId.value)
+  const res = await withLoading(() => BookApi.detail(bookId.value), "加载中...")
   if (res.code === 0) {
     book.value = res.data
   } else {
@@ -140,7 +145,10 @@ const loadChapters = async () => {
   if (!bookId.value) return
   loadingChapters.value = true
   try {
-    const res = await BookApi.chapters(bookId.value, page.value, limit.value)
+    const res = await withLoading(
+      () => BookApi.chapters(bookId.value, page.value, limit.value),
+      "加载章节中..."
+    )
     if (res.code === 0) {
       chapterList.value = res.data.list
       total.value = res.data.total
@@ -152,6 +160,10 @@ const loadChapters = async () => {
   } finally {
     loadingChapters.value = false
   }
+}
+
+const goReader = (chapterId: number) => {
+  router.push({ name: "Reader", query: { id: chapterId } })
 }
 
 const onPageChange = (p: number) => {
@@ -315,6 +327,7 @@ onMounted(() => {
   width: 100%;
   padding: 8px 10px;
   border-radius: var(--radius-sm);
+  cursor: pointer;
   transition: background-color 0.2s ease;
 
   &:hover {

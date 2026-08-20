@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <header class="home-header">
-      <n-input v-model:value="searchValue" class="search-input" round clearable placeholder="搜索书籍">
+      <n-input v-model:value="searchValue" class="search-input" round clearable placeholder="搜索书籍" @click.enter="getBookList">
         <template #prefix>
           <n-icon :component="BookSearch24Regular" />
         </template>
@@ -130,10 +130,12 @@ import {
 import { NIcon } from "naive-ui"
 import BookApi from "@/api/book"
 import BookCover from "@/components/BookCover.vue"
+import { useLoading } from "@/hooks/useLoading"
 import type { Books, BookSaveParams } from "@/types/global"
 
 const router = useRouter()
 const message = useMessage()
+const { withLoading } = useLoading()
 
 const bookList = ref<Books[]>([])
 const searchValue = ref("")
@@ -171,7 +173,7 @@ const rules = {
 }
 
 const getBookList = async () => {
-  const res = await BookApi.list(searchValue.value)
+  const res = await withLoading(() => BookApi.list(searchValue.value), "加载中...")
   if (res.code === 0) {
     bookList.value = res.data
   } else {
@@ -241,10 +243,11 @@ const confirmDelete = (book: Books | null) => {
 }
 
 const doDelete = async () => {
-  if (!deleteBook.value || deleting.value) return
+  const book = deleteBook.value
+  if (!book || deleting.value) return
   deleting.value = true
   try {
-    const res = await BookApi.del(deleteBook.value.id)
+    const res = await withLoading(() => BookApi.del(book.id), "删除中...")
     if (res.code === 0) {
       message.success("删除成功")
       showDeleteModal.value = false
@@ -265,7 +268,7 @@ const importBook = async () => {
     filters: [{ name: "TXT", extensions: ["txt", "epub"] }]
   })
   if (filePath) {
-    const res = await BookApi.import(filePath)
+    const res = await withLoading(() => BookApi.import(filePath), "导入中...")
     if (res.code === 0) {
       message.success("导入成功")
       getBookList()

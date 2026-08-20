@@ -2,14 +2,14 @@ import { invoke } from "@tauri-apps/api/core"
 import { ApiResponse, PageResult, Books, Chapters, BookSaveParams } from "@/types/global"
 
 const BookApi = {
-    /**
-     * 导入书籍
-     * @param path 书籍文件路径
-     * @returns 导入结果
-     */
-    import: async (path: string) => {
-        return await invoke<ApiResponse<any>>("book_import", { path })
-    },
+  /**
+   * 导入书籍
+   * @param path 书籍文件路径
+   * @returns 导入结果
+   */
+  import: async (path: string) => {
+    return await invoke<ApiResponse<any>>("book_import", { path })
+  },
   /**
    * 获取书籍列表
    * @param title 书籍标题模糊查询
@@ -51,6 +51,24 @@ const BookApi = {
    */
   chapters: async (bookId: number, page: number, limit: number) => {
     return await invoke<ApiResponse<PageResult<Chapters>>>("chapter_page", { bookId, page, limit })
+  },
+  /**
+   * 获取章节详情
+   * @param id 章节ID
+   * @returns 章节详情
+   */
+  chapterDetail: async (id: number) => {
+    return await invoke<ApiResponse<Chapters>>("chapter_detail", { id })
+  },
+  /**
+   * 获取相邻章节
+   * @param bookId 书籍ID
+   * @param number 当前章节号
+   * @param offset 偏移量（-1 上一章，1 下一章）
+   * @returns 相邻章节，不存在则为 null
+   */
+  chapterNav: async (bookId: number, number: number, offset: number) => {
+    return await invoke<ApiResponse<Chapters | null>>("chapter_nav", { bookId, number, offset })
   },
 }
 
