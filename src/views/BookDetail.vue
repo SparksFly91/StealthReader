@@ -1,14 +1,13 @@
 <template>
   <div class="book-detail">
-    <section class="detail-header">
-      <div class="header-toolbar">
-        <n-button quaternary circle aria-label="返回" @click="goBack">
-          <template #icon>
-            <n-icon :component="ArrowLeftOutlined" />
-          </template>
-        </n-button>
-      </div>
+    <n-button class="back-btn" quaternary circle aria-label="返回" @click="goBack">
+      <template #icon>
+        <n-icon :component="ArrowLeftOutlined" />
+      </template>
+    </n-button>
 
+    <n-scrollbar class="page-scrollbar">
+    <section class="detail-header">
       <div class="book-summary">
         <div class="summary-cover">
           <BookCover :title="book?.title ?? ''" :author="book?.author" :cover="book?.cover" />
@@ -25,7 +24,9 @@
             <n-descriptions-item label="上次阅读">{{ formatTime(book?.last_read_time) }}</n-descriptions-item>
             <n-descriptions-item label="阅读进度">{{ readProgress }}</n-descriptions-item>
             <n-descriptions-item label="简介" :span="2">
-              <div class="intro-content">{{ book?.introduction || "暂无简介" }}</div>
+              <n-scrollbar class="intro-scrollbar">
+                <div class="intro-content">{{ book?.introduction || "暂无简介" }}</div>
+              </n-scrollbar>
             </n-descriptions-item>
           </n-descriptions>
         </div>
@@ -42,15 +43,22 @@
 
       <n-scrollbar class="chapter-scrollbar">
         <n-spin :show="loadingChapters">
-          <n-list hoverable class="chapter-list">
-            <n-list-item v-for="ch in chapterList" :key="ch.id">
+          <n-grid
+            v-if="chapterList.length > 0"
+            class="chapter-grid"
+            :cols="2"
+            :x-gap="16"
+            :y-gap="6"
+            responsive="screen"
+          >
+            <n-gi v-for="ch in chapterList" :key="ch.id">
               <div class="chapter-item">
                 <span class="chapter-index">{{ ch.number }}</span>
-                <span class="chapter-title">{{ ch.title }}</span>
+                <span class="chapter-title" :title="ch.title">{{ ch.title }}</span>
                 <span class="chapter-chars">{{ ch.total_chars }} 字</span>
               </div>
-            </n-list-item>
-          </n-list>
+            </n-gi>
+          </n-grid>
           <n-empty
             v-if="!loadingChapters && chapterList.length === 0"
             class="chapter-empty"
@@ -72,6 +80,7 @@
         />
       </div>
     </section>
+    </n-scrollbar>
   </div>
 </template>
 
@@ -164,23 +173,45 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .book-detail {
-  height: 90%;
+  position: relative;
+  height: 93%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   padding: 20px 24px;
 }
 
+.back-btn {
+  position: absolute;
+  top: 8px;
+  left: 24px;
+  z-index: 10;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+.page-scrollbar {
+  flex: 1;
+  min-height: 0;
+
+  :deep(.n-scrollbar-container) {
+    height: 100%;
+  }
+
+  :deep(.n-scrollbar-content) {
+    min-height: 100%;
+  }
+}
+
 .detail-header {
-  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.header-toolbar {
-  display: flex;
-  align-items: center;
 }
 
 .book-summary {
@@ -216,9 +247,19 @@ onMounted(() => {
   text-overflow: ellipsis;
 }
 
+.intro-scrollbar {
+  height: 120px;
+
+  :deep(.n-scrollbar-container) {
+    height: 100%;
+  }
+
+  :deep(.n-scrollbar-content) {
+    padding-right: 8px;
+  }
+}
+
 .intro-content {
-  max-height: 120px;
-  overflow-y: auto;
   line-height: 1.6;
   font-size: 13px;
   color: var(--color-text-secondary);
@@ -231,10 +272,9 @@ onMounted(() => {
 }
 
 .chapter-section {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .chapter-header {
@@ -257,8 +297,7 @@ onMounted(() => {
 }
 
 .chapter-scrollbar {
-  flex: 1;
-  min-height: 0;
+  max-height: 420px;
 
   :deep(.n-scrollbar-container) {
     height: 100%;
@@ -272,13 +311,20 @@ onMounted(() => {
 .chapter-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: var(--color-surface-hover);
+  }
 }
 
 .chapter-index {
   flex-shrink: 0;
-  min-width: 40px;
+  min-width: 32px;
   color: var(--color-text-secondary);
   font-size: 13px;
 }
