@@ -13,7 +13,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let pool = tauri::async_runtime::block_on(async {
-                init_pool().await.expect("sqlite数据库连接池初始化失败!")
+                init_pool(app.handle()).await.expect("sqlite数据库连接池初始化失败!")
             });
             app.manage(pool);
             Ok(())

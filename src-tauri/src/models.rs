@@ -45,3 +45,36 @@ impl<T> ApiResponse<T> {
         }
     }
 }
+
+#[derive(Debug, Serialize)]
+pub struct BookInfo {
+    pub id: i64,
+    pub title: String,
+    pub author: String,
+    pub cover: String,
+    pub total_chapters: i32,
+    pub total_chars: i32,
+    pub introduction: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Chapter {
+    pub id: i64,
+    pub number: i32,
+    pub title: String,
+    pub content: String,
+    pub char_count: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Book {
+    pub id: Option<i64>,
+    pub title: String,
+    pub author: String,
+    pub cover: String,
+    pub introduction: String,
+    pub file_path: String,
+    pub total_chapters: i32,
+    pub total_chars: i32,
+    pub chapters: Vec<Chapter>,
+}
