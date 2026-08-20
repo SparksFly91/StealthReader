@@ -1,4 +1,4 @@
-use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use tauri::{AppHandle, Manager};
 
 pub async fn init_pool(app: &AppHandle) -> Result<SqlitePool, sqlx::Error> {
@@ -6,12 +6,14 @@ pub async fn init_pool(app: &AppHandle) -> Result<SqlitePool, sqlx::Error> {
     let app_dir = app.path().app_data_dir().expect("无法获取APP数据目录");
     std::fs::create_dir_all(&app_dir).unwrap();
     let db_path = app_dir.join("reader.db");
-    let db_url = format!("sqlite:{}", db_path.to_str().unwrap());
     // 初始化数据库连接池
+    let options = SqliteConnectOptions::new()
+        .filename(&db_path)
+        .create_if_missing(true);
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
         .min_connections(1)
-        .connect(&db_url)
+        .connect_with(options)
         .await?;
     sqlx::query(
         "
@@ -20,6 +22,7 @@ pub async fn init_pool(app: &AppHandle) -> Result<SqlitePool, sqlx::Error> {
         title TEXT DEFAULT '',
         author TEXT DEFAULT '',
         cover TEXT DEFAULT '',
+        introduction TEXT DEFAULT '',
         file_path TEXT DEFAULT '',
         total_chapters INTEGER DEFAULT 0,
         total_chars INTEGER DEFAULT 0,
@@ -33,7 +36,7 @@ pub async fn init_pool(app: &AppHandle) -> Result<SqlitePool, sqlx::Error> {
         CREATE TABLE IF NOT EXISTS chapters (
         id INTEGER,
         book_id INTEGER NOT NULL,
-        chapter_number INTEGER NOT NULL,
+        number INTEGER NOT NULL,
         title TEXT NOT NULL DEFAULT '',
         content TEXT NOT NULL,
         total_chars INTEGER DEFAULT 0,
@@ -41,7 +44,7 @@ pub async fn init_pool(app: &AppHandle) -> Result<SqlitePool, sqlx::Error> {
         );
 
         CREATE INDEX IF NOT EXISTS idx_chapters_book 
-        ON chapters(book_id, chapter_number);
+        ON chapters(book_id, number);
     ",
     )
     .execute(&pool)

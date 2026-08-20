@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use sqlx::{FromRow};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PageResult<T> {
@@ -21,7 +22,7 @@ impl<T> ApiResponse<T> {
     pub fn success(data: T) -> Self {
         Self {
             success: true,
-            code: 200,
+            code: 0,
             msg: "操作成功".to_string(),
             data: Some(data),
         }
@@ -30,7 +31,7 @@ impl<T> ApiResponse<T> {
     pub fn success_empty() -> ApiResponse<()> {
         ApiResponse {
             success: true,
-            code: 200,
+            code: 0,
             msg: "操作成功".to_string(),
             data: None,
         }
@@ -46,35 +47,28 @@ impl<T> ApiResponse<T> {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct BookInfo {
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct Books {
     pub id: i64,
     pub title: String,
     pub author: String,
     pub cover: String,
-    pub total_chapters: i32,
-    pub total_chars: i32,
-    pub introduction: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Chapter {
-    pub id: i64,
-    pub number: i32,
-    pub title: String,
-    pub content: String,
-    pub char_count: i32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Book {
-    pub id: Option<i64>,
-    pub title: String,
-    pub author: String,
-    pub cover: String,
-    pub introduction: String,
     pub file_path: String,
     pub total_chapters: i32,
     pub total_chars: i32,
-    pub chapters: Vec<Chapter>,
+    pub introduction: String,
+    pub create_time: chrono::NaiveDateTime,
+    pub last_read_chapter_id: i64,
+    pub last_read_position: i32,
+    pub last_read_time: chrono::NaiveDateTime,
+}
+
+#[derive(Debug, FromRow, Serialize, Deserialize, Clone)]
+pub struct Chapters {
+    pub id: i64,
+    pub book_id: i64,
+    pub number: i32,
+    pub title: String,
+    pub content: String,
+    pub total_chars: i32,
 }
