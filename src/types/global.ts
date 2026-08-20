@@ -9,7 +9,7 @@ interface PageResult<T> {
   total: number
   list: T[]
   page: number
-  size: number
+  page_size: number
 }
 
 interface Books {
@@ -17,13 +17,13 @@ interface Books {
   title: string
   author: string
   cover: string
-  instruction: string
+  introduction: string
   file_path: string
   total_chapters: number
   total_chars: number
   create_time: string
-  last_read_time: string
-  last_read_chapter: number
+  last_read_time: string | null
+  last_read_chapter_id: number
   last_read_position: number
 }
 

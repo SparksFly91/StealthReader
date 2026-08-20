@@ -10,8 +10,8 @@
       <button class="setting-btn" title="设置" aria-label="设置" @click="goSettingView">
         <n-icon :size="20" :component="SettingOutlined" />
       </button>
-      <button class="setting-btn" title="阅读" aria-label="阅读" @click="goReaderView">
-        <n-icon :size="20" :component="SettingOutlined" />
+      <button class="setting-btn" title="导入" aria-label="导入" @click="importBook">
+        <n-icon :size="20" :component="CloudUploadOutlined" />
       </button>
     </header>
 
@@ -35,23 +35,8 @@
             class="book-card"
             @click="goDetail(book)"
           >
-            <div class="book-cover">
-              <img
-                v-if="resolveCover(book.cover)"
-                :src="resolveCover(book.cover)"
-                :alt="book.title"
-              />
-              <div
-                v-else
-                class="cover-fallback"
-                :style="{ background: coverGradient(book.title) }"
-              >
-                <span class="cover-spine"></span>
-                <div class="cover-meta">
-                  <span class="cover-title">{{ book.title }}</span>
-                  <span class="cover-author">{{ book.author || "佚名" }}</span>
-                </div>
-              </div>
+            <div class="book-cover-wrap">
+              <BookCover :title="book.title" :author="book.author" :cover="book.cover" />
             </div>
 
             <div class="book-info">
@@ -67,10 +52,10 @@
 
 <script setup lang="ts">
 import { open } from "@tauri-apps/plugin-dialog"
-import { convertFileSrc } from "@tauri-apps/api/core"
 import { BookSearch24Regular } from "@vicons/fluent"
-import { SettingOutlined } from "@vicons/antd"
+import { SettingOutlined, CloudUploadOutlined } from "@vicons/antd"
 import BookApi from "@/api/book"
+import BookCover from "@/components/BookCover.vue"
 import type { Books } from "@/types/global"
 
 const router = useRouter()
@@ -78,31 +63,6 @@ const message = useMessage()
 
 const bookList = ref<Books[]>([])
 const searchValue = ref("")
-
-const coverGradients = [
-  "linear-gradient(135deg, #667eea, #764ba2)",
-  "linear-gradient(135deg, #f093fb, #f5576c)",
-  "linear-gradient(135deg, #4facfe, #00f2fe)",
-  "linear-gradient(135deg, #43e97b, #38f9d7)",
-  "linear-gradient(135deg, #fa709a, #fee140)",
-  "linear-gradient(135deg, #30cfd0, #330867)",
-  "linear-gradient(135deg, #ff9a9e, #fecfef)",
-  "linear-gradient(135deg, #a18cd1, #fbc2eb)",
-]
-
-const coverGradient = (title: string) => {
-  let hash = 0
-  for (let i = 0; i < title.length; i++) {
-    hash = (hash * 31 + title.charCodeAt(i)) >>> 0
-  }
-  return coverGradients[hash % coverGradients.length]
-}
-
-const resolveCover = (cover: string) => {
-  if (!cover) return ""
-  if (/^(https?:|data:|blob:|asset:)/.test(cover)) return cover
-  return convertFileSrc(cover)
-}
 
 const getBookList = async () => {
   const res = await BookApi.list(searchValue.value)
@@ -264,73 +224,17 @@ onMounted(() => {
   flex-direction: column;
 }
 
-.book-cover {
-  position: relative;
+.book-cover-wrap {
   aspect-ratio: 2 / 3;
   border-radius: var(--radius-sm);
   overflow: hidden;
   box-shadow: var(--shadow-card);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
 }
 
-.book-card:hover .book-cover {
+.book-card:hover .book-cover-wrap {
   transform: translateY(-4px);
   box-shadow: var(--shadow-card-hover);
-}
-
-.cover-fallback {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 12px;
-  color: #fff;
-  text-align: center;
-}
-
-.cover-spine {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 8px;
-  background: rgba(0, 0, 0, 0.18);
-}
-
-.cover-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.cover-title {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-}
-
-.cover-author {
-  font-size: 12px;
-  opacity: 0.85;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .book-info {

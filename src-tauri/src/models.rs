@@ -60,7 +60,7 @@ pub struct Books {
     pub create_time: chrono::NaiveDateTime,
     pub last_read_chapter_id: i64,
     pub last_read_position: i32,
-    pub last_read_time: chrono::NaiveDateTime,
+    pub last_read_time: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Debug, FromRow, Serialize, Deserialize, Clone)]
