@@ -1,14 +1,13 @@
 <template>
   <div class="setting">
-    <header class="setting-header">
-      <button class="back-btn" title="返回" aria-label="返回" @click="goBack">
-        <n-icon :component="ArrowLeftOutlined" />
-      </button>
-      <span class="setting-title">设置</span>
-    </header>
-
     <div class="setting-body">
       <aside class="setting-sider">
+        <div class="setting-sider__header">
+          <button class="back-btn" title="返回" aria-label="返回" @click="goBack">
+            <n-icon :component="ArrowLeftOutlined" />
+          </button>
+          <span class="setting-title">设置</span>
+        </div>
         <n-scrollbar class="setting-sider__scroll">
           <n-anchor
             class="setting-anchor"
@@ -76,76 +75,78 @@ const onNavClick = (item: (typeof menuItems)[number], e: Event) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--color-window-bg);
 }
 
-.setting-header {
-  flex-shrink: 0;
+.setting-sider__header {
+  height: 50px;
   display: flex;
   align-items: center;
-  margin: 20px 24px 16px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .back-btn {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-surface);
+  border-radius: 6px;
+  background-color: transparent;
   color: var(--color-text-secondary);
-  box-shadow: var(--shadow-card);
   cursor: pointer;
-  transition: color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease;
 
   &:hover {
     color: var(--color-accent);
     background-color: var(--color-surface-hover);
-    box-shadow: var(--shadow-card-hover);
   }
 }
 
 .setting-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-left: 12px;
+  margin-left: 10px;
 }
 
 .setting-body {
   flex: 1;
   min-height: 0;
   display: flex;
-  margin: 0 24px 24px;
+  gap: 12px;
+  padding: 12px;
 }
 
 .setting-sider {
   flex-shrink: 0;
-  width: 200px;
-  margin-right: 24px;
+  width: 176px;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  border-radius: 8px;
 }
 
 .setting-sider__scroll {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .setting-anchor {
-  margin: 12px;
+  margin: 8px;
 
   :deep(.n-anchor-link) {
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   :deep(.n-anchor-link__title) {
     padding: 0;
     color: var(--color-text-secondary);
-    border-radius: var(--radius-sm);
+    border-radius: 6px;
     transition: color 0.2s ease, background-color 0.2s ease;
   }
 
@@ -158,16 +159,19 @@ const onNavClick = (item: (typeof menuItems)[number], e: Event) => {
 .nav-item {
   display: flex;
   align-items: center;
-  margin: 8px 12px;
+  height: 34px;
+  padding: 0 10px;
   font-size: 14px;
+  border-radius: 6px;
 
   &__icon {
-    margin-right: 10px;
+    margin-right: 8px;
   }
 
   &--active {
     color: var(--color-accent);
     font-weight: 600;
+    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   }
 }
 
@@ -177,11 +181,57 @@ const onNavClick = (item: (typeof menuItems)[number], e: Event) => {
   overflow: hidden;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  border-radius: 8px;
 }
 
 .setting-content__scroll {
   height: 100%;
+}
+
+@media (max-width: 640px) {
+  .setting-body {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .setting-sider {
+    width: auto;
+    height: 96px;
+    overflow: visible;
+  }
+
+  .setting-sider__header {
+    flex-shrink: 0;
+    height: 44px;
+    padding: 0 10px;
+  }
+
+  .setting-sider__scroll {
+    flex: none;
+    height: 50px;
+  }
+
+  .setting-anchor {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin: 0 6px;
+
+    :deep(.n-anchor-link) {
+      flex: 1;
+      margin: 0;
+    }
+  }
+
+  .nav-item {
+    justify-content: center;
+    height: 34px;
+    padding: 0 6px;
+
+    &__icon {
+      margin-right: 5px;
+    }
+  }
 }
 </style>

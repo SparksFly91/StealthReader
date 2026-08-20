@@ -28,35 +28,34 @@ const shortcuts = [
 
 <style lang="scss" scoped>
 .setting-page {
-  margin: 24px 28px;
+  max-width: 760px;
+  padding: 22px 26px 32px;
 }
 
 .page-title {
-  margin: 0 0 4px;
-  font-size: 20px;
+  margin: 0 0 2px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .page-desc {
-  margin: 0 0 20px;
+  margin: 0 0 18px;
   font-size: 13px;
   color: var(--color-text-secondary);
 }
 
 .setting-group {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-card);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .shortcut-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 16px;
-  min-height: 44px;
+  padding: 0 16px;
+  min-height: 46px;
 
   & + & {
     border-top: 1px solid var(--color-border);
@@ -75,14 +74,14 @@ const shortcuts = [
 
 .shortcut-key {
   min-width: 24px;
-  height: 24px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin: 0 2px;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background-color: var(--color-window-bg);
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--color-window-bg) 72%, transparent);
   color: var(--color-text-primary);
   font-size: 12px;
   font-family: inherit;
@@ -91,5 +90,11 @@ const shortcuts = [
 .shortcut-sep {
   color: var(--color-text-secondary);
   font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .setting-page {
+    padding: 18px 16px 24px;
+  }
 }
 </style>

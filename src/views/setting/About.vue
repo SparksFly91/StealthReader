@@ -16,51 +16,50 @@
 
 <style lang="scss" scoped>
 .setting-page {
-  margin: 24px 28px;
+  max-width: 760px;
+  padding: 22px 26px 32px;
 }
 
 .page-title {
-  margin: 0 0 4px;
-  font-size: 20px;
+  margin: 0 0 2px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .page-desc {
-  margin: 0 0 20px;
+  margin: 0 0 18px;
   font-size: 13px;
   color: var(--color-text-secondary);
 }
 
 .about-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  column-gap: 14px;
   align-items: center;
-  justify-content: center;
-  min-height: 320px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  margin-top: 8px;
+  min-height: 108px;
+  padding: 18px 16px;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .app-logo {
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-card);
+  border-radius: 8px;
   background: var(--color-accent-gradient);
   color: var(--color-text-invert);
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 16px;
+  grid-row: span 2;
 }
 
 .app-name {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
@@ -68,12 +67,23 @@
 .app-version {
   font-size: 13px;
   color: var(--color-text-secondary);
-  margin-top: 4px;
+  margin: 2px 0 0;
 }
 
 .app-desc {
+  grid-column: 1 / -1;
   font-size: 13px;
   color: var(--color-text-secondary);
-  margin-top: 16px;
+  margin: 12px 0 0;
+}
+
+@media (max-width: 640px) {
+  .setting-page {
+    padding: 18px 16px 24px;
+  }
+
+  .app-desc {
+    margin-left: 0;
+  }
 }
 </style>

@@ -39,28 +39,29 @@ const wordWrap = ref(true)
 
 <style lang="scss" scoped>
 .setting-page {
-  margin: 24px 28px;
+  max-width: 760px;
+  padding: 22px 26px 32px;
 }
 
 .page-title {
-  margin: 0 0 4px;
-  font-size: 20px;
+  margin: 0 0 2px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .page-desc {
-  margin: 0 0 20px;
+  margin: 0 0 18px;
   font-size: 13px;
   color: var(--color-text-secondary);
 }
 
 .setting-group {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .group-title {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-secondary);
@@ -70,23 +71,21 @@ const wordWrap = ref(true)
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-card);
+  min-height: 56px;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 0;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s ease;
 
   &:hover {
-    border-color: var(--color-border-hover);
-    box-shadow: var(--shadow-card-hover);
+    background-color: color-mix(in srgb, var(--color-surface-hover) 42%, transparent);
   }
 }
 
 .item-info {
   display: flex;
   flex-direction: column;
-  margin: 12px 16px;
+  padding: 0 16px;
 }
 
 .item-label {
@@ -103,6 +102,28 @@ const wordWrap = ref(true)
 
 :deep(.n-radio-group),
 :deep(.n-switch) {
-  margin: 0 16px;
+  margin: 0 16px 0 12px;
+}
+
+@media (max-width: 640px) {
+  .setting-page {
+    padding: 18px 16px 24px;
+  }
+
+  .setting-item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .item-info {
+    padding: 0;
+  }
+
+  :deep(.n-radio-group),
+  :deep(.n-switch) {
+    margin: 0;
+  }
 }
 </style>
