@@ -41,7 +41,7 @@ interface BookSaveParams {
   title: string
   author: string
   cover: string
-  instruction: string
+  introduction: string
 }
 
 export type { ApiResponse, PageResult, Books, Chapters, BookSaveParams }

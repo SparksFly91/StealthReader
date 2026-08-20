@@ -4,7 +4,7 @@
     <div v-else class="cover-fallback" :style="{ background: coverGradient(title) }">
       <span class="cover-spine"></span>
       <div class="cover-meta">
-        <span class="cover-title">{{ title }}</span>
+        <p class="cover-title">{{ title }}</p>
         <span class="cover-author">{{ author || "佚名" }}</span>
       </div>
     </div>

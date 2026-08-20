@@ -4,6 +4,7 @@ use tauri::State;
 use tauri_helper::auto_collect_command;
 
 use crate::models::{ApiResponse, Books, Chapters, PageResult};
+use crate::services::parser::parse_book;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BookSaveReq {
@@ -11,7 +12,7 @@ pub struct BookSaveReq {
     pub title: String,
     pub author: String,
     pub cover: String,
-    pub instruction: String,
+    pub introduction: String,
 }
 
 /**
@@ -21,21 +22,45 @@ pub struct BookSaveReq {
  */
 #[tauri::command]
 #[auto_collect_command]
-pub async fn import_book(
+pub async fn book_import(
     pool: State<'_, SqlitePool>,
     path: String,
 ) -> Result<ApiResponse<()>, String> {
-    let title = std::path::Path::new(&path)
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("未命名")
-        .to_string();
-    sqlx::query("INSERT INTO books (title, file_path) VALUES (?,?)")
-        .bind(&title)
-        .bind(&path)
-        .execute(&*pool)
+    let parsed = parse_book(&path)?;
+
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+
+    let result = sqlx::query(
+        "INSERT INTO books (title, author, introduction, file_path, total_chapters, total_chars) VALUES (?,?,?,?,?,?)",
+    )
+    .bind(&parsed.title)
+    .bind(&parsed.author)
+    .bind(&parsed.introduction)
+    .bind(&path)
+    .bind(parsed.total_chapters)
+    .bind(parsed.total_chars)
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let book_id = result.last_insert_rowid();
+
+    for chapter in &parsed.chapters {
+        sqlx::query(
+            "INSERT INTO chapters (book_id, number, title, content, total_chars) VALUES (?,?,?,?,?)",
+        )
+        .bind(book_id)
+        .bind(chapter.number)
+        .bind(&chapter.title)
+        .bind(&chapter.content)
+        .bind(chapter.total_chars)
+        .execute(&mut *tx)
         .await
         .map_err(|e| e.to_string())?;
+    }
+
+    tx.commit().await.map_err(|e| e.to_string())?;
+
     Ok(ApiResponse::<()>::success_empty())
 }
 
@@ -71,11 +96,11 @@ pub async fn book_edit(
     pool: State<'_, SqlitePool>,
     params: BookSaveReq,
 ) -> Result<ApiResponse<()>, String> {
-    sqlx::query("UPDATE books SET title = ?, author = ?, cover = ?, instruction = ? WHERE id = ?")
+    sqlx::query("UPDATE books SET title = ?, author = ?, cover = ?, introduction = ? WHERE id = ?")
         .bind(params.title)
         .bind(params.author)
         .bind(params.cover)
-        .bind(params.instruction)
+        .bind(params.introduction)
         .bind(params.id)
         .execute(&*pool)
         .await

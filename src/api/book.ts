@@ -8,7 +8,7 @@ const BookApi = {
      * @returns 导入结果
      */
     import: async (path: string) => {
-        return await invoke<ApiResponse<any>>("import_book", { path })
+        return await invoke<ApiResponse<any>>("book_import", { path })
     },
   /**
    * 获取书籍列表
@@ -44,13 +44,13 @@ const BookApi = {
   },
   /**
    * 获取书籍章节列表
-   * @param book_id 书籍ID
+   * @param bookId 书籍ID
    * @param page 页码
    * @param limit 每页数量
    * @returns 书籍章节列表
    */
-  chapters: async (book_id: number, page: number, limit: number) => {
-    return await invoke<ApiResponse<PageResult<Chapters>>>("chapter_page", { book_id, page, limit })
+  chapters: async (bookId: number, page: number, limit: number) => {
+    return await invoke<ApiResponse<PageResult<Chapters>>>("chapter_page", { bookId, page, limit })
   },
 }
 

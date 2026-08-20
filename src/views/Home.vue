@@ -11,7 +11,7 @@
         <n-icon :size="20" :component="SettingOutlined" />
       </button>
       <button class="setting-btn" title="导入" aria-label="导入" @click="importBook">
-        <n-icon :size="20" :component="CloudUploadOutlined" />
+        <n-icon :size="20" :component="ImportOutlined" />
       </button>
     </header>
 
@@ -34,6 +34,7 @@
             :key="book.id"
             class="book-card"
             @click="goDetail(book)"
+            @contextmenu.prevent="onContextMenu($event, book)"
           >
             <div class="book-cover-wrap">
               <BookCover :title="book.title" :author="book.author" :cover="book.cover" />
@@ -47,22 +48,127 @@
         </div>
       </n-scrollbar>
     </section>
+
+    <n-dropdown
+      trigger="manual"
+      :show="showDropdown"
+      :x="dropdownX"
+      :y="dropdownY"
+      :options="dropdownOptions"
+      @select="handleDropdownSelect"
+      @clickoutside="showDropdown = false"
+    />
+
+    <n-modal
+      v-model:show="showEditModal"
+      preset="card"
+      title="编辑书籍"
+      :bordered="false"
+      style="width: 480px"
+    >
+      <n-form
+        ref="formRef"
+        :model="editForm"
+        :rules="rules"
+        label-placement="left"
+        label-width="64"
+        require-mark-placement="left"
+      >
+        <n-form-item label="书名" path="title">
+          <n-input v-model:value="editForm.title" placeholder="请输入书名" />
+        </n-form-item>
+        <n-form-item label="作者" path="author">
+          <n-input v-model:value="editForm.author" placeholder="请输入作者" />
+        </n-form-item>
+        <n-form-item label="简介" path="introduction">
+          <n-input
+            v-model:value="editForm.introduction"
+            type="textarea"
+            placeholder="请输入简介"
+            :autosize="{ minRows: 3, maxRows: 6 }"
+          />
+        </n-form-item>
+      </n-form>
+      <template #footer>
+        <n-space justify="end">
+          <n-button @click="showEditModal = false">取消</n-button>
+          <n-button type="primary" :loading="saving" @click="submitEdit">保存</n-button>
+        </n-space>
+      </template>
+    </n-modal>
+
+    <n-modal
+      v-model:show="showDeleteModal"
+      preset="card"
+      title="删除书籍"
+      :bordered="false"
+      style="width: 400px"
+    >
+      <div class="delete-tip">
+        确定要删除《{{ deleteBook?.title }}》吗？删除后不可恢复。
+      </div>
+      <template #footer>
+        <n-space justify="end">
+          <n-button @click="showDeleteModal = false">取消</n-button>
+          <n-button type="error" :loading="deleting" @click="doDelete">删除</n-button>
+        </n-space>
+      </template>
+    </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
+import { h, type Component } from "vue"
 import { open } from "@tauri-apps/plugin-dialog"
 import { BookSearch24Regular } from "@vicons/fluent"
-import { SettingOutlined, CloudUploadOutlined } from "@vicons/antd"
+import {
+  SettingOutlined,
+  ImportOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@vicons/antd"
+import { NIcon } from "naive-ui"
 import BookApi from "@/api/book"
 import BookCover from "@/components/BookCover.vue"
-import type { Books } from "@/types/global"
+import type { Books, BookSaveParams } from "@/types/global"
 
 const router = useRouter()
 const message = useMessage()
 
 const bookList = ref<Books[]>([])
 const searchValue = ref("")
+
+const showDeleteModal = ref(false)
+const deleting = ref(false)
+const deleteBook = ref<Books | null>(null)
+
+const showDropdown = ref(false)
+const dropdownX = ref(0)
+const dropdownY = ref(0)
+const contextBook = ref<Books | null>(null)
+
+const renderDropdownIcon = (icon: Component) => () => h(NIcon, null, { default: () => h(icon) })
+
+const dropdownOptions = [
+  { label: "编辑", key: "edit", icon: renderDropdownIcon(EditOutlined) },
+  { label: "删除", key: "delete", icon: renderDropdownIcon(DeleteOutlined) },
+]
+
+const showEditModal = ref(false)
+const saving = ref(false)
+const formRef = ref<any>()
+
+const editForm = reactive<BookSaveParams>({
+  id: 0,
+  title: "",
+  author: "",
+  cover: "",
+  introduction: "",
+})
+
+const rules = {
+  title: { required: true, message: "请输入书名", trigger: ["blur", "input"] },
+}
 
 const getBookList = async () => {
   const res = await BookApi.list(searchValue.value)
@@ -77,12 +183,80 @@ const goSettingView = () => {
   router.push({ name: "Setting" })
 }
 
-const goReaderView = () => {
-  router.push({ name: "Reader" })
-}
-
 const goDetail = (book: Books) => {
   router.push({ name: "BookDetail", query: { id: book.id } })
+}
+
+const onContextMenu = (e: MouseEvent, book: Books) => {
+  contextBook.value = book
+  dropdownX.value = e.clientX
+  dropdownY.value = e.clientY
+  showDropdown.value = true
+}
+
+const handleDropdownSelect = (key: string | number) => {
+  showDropdown.value = false
+  if (key === "edit") {
+    openEditModal(contextBook.value)
+  } else if (key === "delete") {
+    confirmDelete(contextBook.value)
+  }
+}
+
+const openEditModal = (book: Books | null) => {
+  if (!book) return
+  editForm.id = book.id
+  editForm.title = book.title
+  editForm.author = book.author
+  editForm.cover = book.cover
+  editForm.introduction = book.introduction || ""
+  showEditModal.value = true
+}
+
+const submitEdit = async () => {
+  try {
+    await formRef.value?.validate()
+  } catch {
+    return
+  }
+  saving.value = true
+  try {
+    const res = await BookApi.edit({ ...editForm })
+    if (res.code === 0) {
+      message.success("保存成功")
+      showEditModal.value = false
+      getBookList()
+    } else {
+      message.error(res.msg)
+    }
+  } finally {
+    saving.value = false
+  }
+}
+
+const confirmDelete = (book: Books | null) => {
+  if (!book) return
+  deleteBook.value = book
+  showDeleteModal.value = true
+}
+
+const doDelete = async () => {
+  if (!deleteBook.value || deleting.value) return
+  deleting.value = true
+  try {
+    const res = await BookApi.del(deleteBook.value.id)
+    if (res.code === 0) {
+      message.success("删除成功")
+      showDeleteModal.value = false
+      getBookList()
+    } else {
+      message.error(res.msg)
+    }
+  } catch (e) {
+    message.error("删除失败，请重试")
+  } finally {
+    deleting.value = false
+  }
 }
 
 const importBook = async () => {
@@ -90,7 +264,6 @@ const importBook = async () => {
     multiple: false,
     filters: [{ name: "TXT", extensions: ["txt", "epub"] }]
   })
-  console.log(filePath)
   if (filePath) {
     const res = await BookApi.import(filePath)
     if (res.code === 0) {
@@ -215,6 +388,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 20px;
+  margin-top: 5px;
   padding-bottom: 8px;
 }
 
@@ -259,5 +433,12 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.delete-tip {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  word-break: break-all;
 }
 </style>

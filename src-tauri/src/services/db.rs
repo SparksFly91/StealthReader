@@ -34,7 +34,7 @@ pub async fn init_pool(app: &AppHandle) -> Result<SqlitePool, sqlx::Error> {
         );
 
         CREATE TABLE IF NOT EXISTS chapters (
-        id INTEGER,
+        id INTEGER PRIMARY KEY,
         book_id INTEGER NOT NULL,
         number INTEGER NOT NULL,
         title TEXT NOT NULL DEFAULT '',
@@ -49,5 +49,38 @@ pub async fn init_pool(app: &AppHandle) -> Result<SqlitePool, sqlx::Error> {
     )
     .execute(&pool)
     .await?;
+
+    // 兼容旧库：确保 chapters.id 为主键（自增）
+    let id_is_pk: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM pragma_table_info('chapters') WHERE name = 'id' AND pk > 0",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap_or(0);
+
+    if id_is_pk == 0 {
+        sqlx::query("DROP TABLE IF EXISTS chapters")
+            .execute(&pool)
+            .await?;
+        sqlx::query(
+            "
+            CREATE TABLE IF NOT EXISTS chapters (
+            id INTEGER PRIMARY KEY,
+            book_id INTEGER NOT NULL,
+            number INTEGER NOT NULL,
+            title TEXT NOT NULL DEFAULT '',
+            content TEXT NOT NULL,
+            total_chars INTEGER DEFAULT 0,
+            FOREIGN KEY (book_id) REFERENCES books ON DELETE CASCADE
+            );
+            ",
+        )
+        .execute(&pool)
+        .await?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_chapters_book ON chapters(book_id, number)")
+            .execute(&pool)
+            .await?;
+    }
+
     Ok(pool)
 }

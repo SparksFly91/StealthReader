@@ -25,7 +25,7 @@
             <n-descriptions-item label="上次阅读">{{ formatTime(book?.last_read_time) }}</n-descriptions-item>
             <n-descriptions-item label="阅读进度">{{ readProgress }}</n-descriptions-item>
             <n-descriptions-item label="简介" :span="2">
-              {{ book?.introduction || "暂无简介" }}
+              <div class="intro-content">{{ book?.introduction || "暂无简介" }}</div>
             </n-descriptions-item>
           </n-descriptions>
         </div>
@@ -138,6 +138,8 @@ const loadChapters = async () => {
     } else {
       message.error(res.msg)
     }
+  } catch (e) {
+    message.error("章节加载失败")
   } finally {
     loadingChapters.value = false
   }
@@ -188,8 +190,9 @@ onMounted(() => {
 
 .summary-cover {
   width: 120px;
-  aspect-ratio: 2 / 3;
+  height: 180px;
   flex-shrink: 0;
+  align-self: flex-start;
   border-radius: var(--radius-sm);
   overflow: hidden;
   box-shadow: var(--shadow-card);
@@ -211,6 +214,16 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.intro-content {
+  max-height: 120px;
+  overflow-y: auto;
+  line-height: 1.6;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .detail-divider {
@@ -246,6 +259,14 @@ onMounted(() => {
 .chapter-scrollbar {
   flex: 1;
   min-height: 0;
+
+  :deep(.n-scrollbar-container) {
+    height: 100%;
+  }
+
+  :deep(.n-scrollbar-content) {
+    min-height: 100%;
+  }
 }
 
 .chapter-item {
