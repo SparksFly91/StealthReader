@@ -9,7 +9,7 @@
         <span class="shortcut-keys">
           <template v-for="(key, i) in item.keys" :key="i">
             <kbd class="shortcut-key">{{ key }}</kbd>
-            <span v-if="i < item.keys.length - 1" class="shortcut-sep">+</span>
+            <span v-if="i < item.keys.length - 1" class="shortcut-sep">/</span>
           </template>
         </span>
       </div>
@@ -19,10 +19,10 @@
 
 <script setup lang="ts">
 const shortcuts = [
-  { action: "上一页", keys: ["←"] },
-  { action: "下一页", keys: ["→"] },
-  { action: "打开搜索", keys: ["Ctrl", "F"] },
-  { action: "打开设置", keys: ["Ctrl", ","] },
+  { action: "上一页", keys: ["←", "PageUp"] },
+  { action: "下一页", keys: ["→", "PageDown"] },
+  { action: "上一章", keys: ["←"] },
+  { action: "下一章", keys: ["→"] },
 ]
 </script>
 

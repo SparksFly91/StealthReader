@@ -1,7 +1,7 @@
 <template>
-  <div class="glass-panel" :style="readerStyle" data-tauri-drag-region>
+  <div class="glass-panel" :style="readerStyle" data-tauri-drag-region @mousedown="onWindowMouseDown">
     <div class="reading-wrap">
-      <div class="chapter-name">{{ chapter?.title || "加载中..." }}</div>
+      <div v-if="currentPage == 0" class="chapter-name">{{ chapter?.title || "加载中..." }}</div>
 
       <div ref="pageEl" class="page-body" @click="onPageClick">
         <div class="page-text">{{ currentText }}</div>
@@ -9,19 +9,19 @@
 
       <div class="page-nav">
         <span class="page-info">{{ pageInfo }}</span>
-        <n-space justify="space-between" class="nav-btns">
-          <n-space>
+        <div class="nav-btns">
+          <n-space class="nav-group nav-group--left" :size="0">
             <n-button size="small" text @click="switchChapter(-1)">上一章</n-button>
             <n-button size="small" text :disabled="currentPage <= 0" @click="prevPage">上一页</n-button>
           </n-space>
-          <n-button size="small" text @click="goBack">返回</n-button>
-          <n-space>
+          <n-button class="nav-back" size="small" text @click="goBack">返回</n-button>
+          <n-space class="nav-group nav-group--right" :size="0">
             <n-button size="small" text :disabled="currentPage >= pages.length - 1" @click="nextPage">
               下一页
             </n-button>
             <n-button size="small" text @click="switchChapter(1)">下一章</n-button>
           </n-space>
-        </n-space>
+        </div>
       </div>
     </div>
   </div>
@@ -126,10 +126,23 @@ const onPageClick = (e: MouseEvent) => {
   else nextPage()
 }
 
+const onWindowMouseDown = (e: MouseEvent) => {
+  const target = e.target as HTMLElement | null
+  if (target?.closest("button, a, input, textarea, select, [role='button']")) return
+  void appWindow.startDragging()
+}
+
 const onKeydown = (e: KeyboardEvent) => {
-  if (e.key === "ArrowLeft" || e.key === "PageUp") {
+  if (e.key === "ArrowLeft") {
+    e.preventDefault()
+    switchChapter(-1)
+  } else if (e.key === "ArrowRight") {
+    e.preventDefault()
+    switchChapter(1)
+  } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+    e.preventDefault()
     prevPage()
-  } else if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
+  } else if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") {
     e.preventDefault()
     nextPage()
   }
@@ -192,6 +205,7 @@ onUnmounted(() => {
 <style scoped>
 .glass-panel {
   position: relative;
+  box-sizing: border-box;
   width: 100vw;
   height: 100vh;
   background: var(--reader-background-color);
@@ -232,7 +246,7 @@ onUnmounted(() => {
 .chapter-name {
   flex-shrink: 0;
   text-align: center;
-  font-size: 22px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--reader-font-color);
   margin-bottom: 20px;
@@ -260,8 +274,9 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 4px;
+  margin-top: 8px;
+  padding-bottom: 2px;
 }
 
 .page-info {
@@ -275,6 +290,30 @@ onUnmounted(() => {
 }
 
 .nav-btns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2px;
   width: 100%;
+}
+
+.nav-group {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nav-group--right {
+  justify-content: flex-end;
+}
+
+.nav-btns :deep(.n-button) {
+  min-width: 0;
+  padding: 0 3px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.nav-back {
+  padding: 0 4px;
 }
 </style>
