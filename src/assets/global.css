@@ -28,4 +28,7 @@
 
   /* 尺寸 */
   --titlebar-height: 38px;
+
+  --set-item-title-size: 14px;
+  --set-item-desc-size: 12px;
 }

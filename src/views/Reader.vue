@@ -1,5 +1,5 @@
 <template>
-  <div class="glass-panel" data-tauri-drag-region>
+  <div class="glass-panel" :style="readerStyle" data-tauri-drag-region>
     <div class="reading-wrap">
       <div class="chapter-name">{{ chapter?.title || "加载中..." }}</div>
 
@@ -28,8 +28,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick } from "vue"
-import { ArrowLeftOutlined } from "@vicons/antd"
+import { useSettingStore } from '@/stores/setting'
+import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window'
 import BookApi from "@/api/book"
 import { useLoading } from "@/hooks/useLoading"
 import type { Chapters } from "@/types/global"
@@ -37,6 +37,8 @@ import type { Chapters } from "@/types/global"
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const settingStore = useSettingStore()
+const appWindow = getCurrentWindow()
 const { withLoading } = useLoading()
 
 const chapterId = computed(() => Number(route.query.id) || 0)
@@ -49,6 +51,12 @@ const currentPage = ref(0)
 const goBack = () => router.back()
 
 const currentText = computed(() => pages.value[currentPage.value] ?? "")
+
+const readerStyle = computed(() => ({
+  "--reader-font-size": `${settingStore.reader.fontSize}px`,
+  "--reader-font-color": settingStore.reader.fontColor,
+  "--reader-background-color": settingStore.reader.backgroundColor,
+}))
 
 const pageInfo = computed(() => {
   if (pages.value.length === 0) return ""
@@ -75,7 +83,7 @@ const paginate = () => {
   const el = pageEl.value
   if (!el) return
 
-  const fontSize = 6
+  const fontSize = Math.max(1, Number(settingStore.reader.fontSize) || 12)
   const lineHeight = 1.8
   const width = el.clientWidth
   const height = el.clientHeight
@@ -129,6 +137,11 @@ const onKeydown = (e: KeyboardEvent) => {
 
 const onResize = () => paginate()
 
+watch(
+  () => settingStore.reader.fontSize,
+  () => nextTick(paginate)
+)
+
 const loadChapter = async () => {
   if (!chapterId.value) {
     message.error("章节参数错误")
@@ -165,6 +178,8 @@ const switchChapter = async (offset: number) => {
 onMounted(() => {
   window.addEventListener("keydown", onKeydown)
   window.addEventListener("resize", onResize)
+  appWindow.setShadow(settingStore.reader.showShadow)
+  appWindow.setSize(new LogicalSize(settingStore.reader.windowWidth, settingStore.reader.windowHeight))
   loadChapter()
 })
 
@@ -179,11 +194,10 @@ onUnmounted(() => {
   position: relative;
   width: 100vw;
   height: 100vh;
-  background: rgba(20, 20, 20, 0.05);
-  backdrop-filter: blur(20px);
+  background: var(--reader-background-color);
   /* border: 1px solid rgba(255, 255, 255, 0.2); */
-  padding: 20px;
-  color: #3b3b3b;
+  padding: 10px;
+  color: var(--reader-font-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -212,7 +226,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
-  padding: 44px 40px 16px;
+  /* padding: 44px 40px 16px; */
 }
 
 .chapter-name {
@@ -220,7 +234,7 @@ onUnmounted(() => {
   text-align: center;
   font-size: 22px;
   font-weight: 700;
-  color: #3b3b3b;
+  color: var(--reader-font-color);
   margin-bottom: 20px;
 }
 
@@ -233,9 +247,9 @@ onUnmounted(() => {
 .page-text {
   height: 100%;
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--reader-font-size);
   line-height: 1.8;
-  color: #3b3b3b;
+  color: var(--reader-font-color);
   white-space: pre-wrap;
   word-break: break-word;
   text-align: justify;
@@ -252,7 +266,12 @@ onUnmounted(() => {
 
 .page-info {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--reader-font-color);
+  opacity: 0.65;
+}
+
+.glass-panel :deep(.n-button) {
+  color: var(--reader-font-color);
 }
 
 .nav-btns {

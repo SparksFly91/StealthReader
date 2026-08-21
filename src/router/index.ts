@@ -46,6 +46,15 @@ const routes = [
             },
           },
           {
+            path: "/setting/reader-setting",
+            name: "ReaderSetting",
+            component: () => import("@/views/setting/ReaderSetting.vue"),
+            meta: {
+              isCache: true,
+              title: "阅读设置",
+            },
+          },
+          {
             path: "/setting/shortcut",
             name: "Shortcut",
             component: () => import("@/views/setting/Shortcut.vue"),

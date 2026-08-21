@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { h, type Component } from "vue"
+import {getCurrentWindow, LogicalSize} from '@tauri-apps/api/window'
 import { open } from "@tauri-apps/plugin-dialog"
 import { BookSearch24Regular } from "@vicons/fluent"
 import {
@@ -131,10 +131,13 @@ import { NIcon } from "naive-ui"
 import BookApi from "@/api/book"
 import BookCover from "@/components/BookCover.vue"
 import { useLoading } from "@/hooks/useLoading"
+import { useSettingStore } from '@/stores/setting'
 import type { Books, BookSaveParams } from "@/types/global"
 
 const router = useRouter()
 const message = useMessage()
+const settingStore = useSettingStore()
+const appWindow = getCurrentWindow()
 const { withLoading } = useLoading()
 
 const bookList = ref<Books[]>([])
@@ -280,6 +283,8 @@ const importBook = async () => {
 
 onMounted(() => {
   getBookList()
+  appWindow.setShadow(settingStore.appearance.showShadow)
+  appWindow.setSize(new LogicalSize(800, 600))
 })
 </script>
 
