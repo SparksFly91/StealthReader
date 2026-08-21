@@ -38,7 +38,7 @@ jobs:
 
     steps:
       # 1. 检出代码
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # 2. 安装 Linux 系统依赖（仅 Ubuntu）
       - name: Install dependencies (Ubuntu only)
@@ -48,11 +48,17 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
 
       # 3. 安装 Node.js
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: lts/*
-          cache: 'npm'    # 或 yarn / pnpm
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       # 4. 安装 Rust
       - name: Install Rust stable
@@ -68,7 +74,7 @@ jobs:
 
       # 6. 安装前端依赖
       - name: Install frontend dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       # 7. 构建并发布（核心步骤）
       - uses: tauri-apps/tauri-action@v0
