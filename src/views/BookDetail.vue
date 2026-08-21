@@ -179,10 +179,6 @@ const loadChapters = async () => {
   }
 }
 
-const goReader = (chapterId: number) => {
-  router.push({ name: "Reader", query: { id: chapterId } })
-}
-
 const onPageChange = (p: number) => {
   page.value = p
   loadChapters()
