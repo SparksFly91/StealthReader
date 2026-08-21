@@ -17,11 +17,11 @@ jobs:
         include:
           # macOS Apple Silicon (M1/M2/M3)
           - platform: "macos-latest"
-            args: "--target aarch64-apple-darwin"
+            args: "--target aarch64-apple-darwin --bundles app,dmg"
 
           # Windows x64
           - platform: "windows-latest"
-            args: ""
+            args: "--bundles nsis"
 
     runs-on: ${{ matrix.platform }}
 
