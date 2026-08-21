@@ -6,7 +6,6 @@
       </template>
     </n-button>
 
-    <n-scrollbar class="page-scrollbar">
     <section class="detail-header">
       <div class="book-summary">
         <div class="summary-cover">
@@ -24,9 +23,26 @@
             <n-descriptions-item label="上次阅读">{{ formatTime(book?.last_read_time) }}</n-descriptions-item>
             <n-descriptions-item label="阅读进度">{{ readProgress }}</n-descriptions-item>
             <n-descriptions-item label="简介" :span="2">
-              <n-scrollbar class="intro-scrollbar">
-                <div class="intro-content">{{ book?.introduction || "暂无简介" }}</div>
-              </n-scrollbar>
+              <n-popover
+                trigger="hover"
+                placement="bottom-start"
+                :show-arrow="true"
+                content-class="intro-popover-panel"
+                :content-style="{
+                  width: '520px',
+                  maxWidth: 'calc(100vw - 64px)',
+                  maxHeight: '180px',
+                  padding: '0',
+                  overflow: 'hidden',
+                }"
+              >
+                <template #trigger>
+                  <div class="intro-preview">{{ book?.introduction || "暂无简介" }}</div>
+                </template>
+                <n-scrollbar class="intro-popover-scrollbar" style="height: 180px">
+                  <div class="intro-popover">{{ book?.introduction || "暂无简介" }}</div>
+                </n-scrollbar>
+              </n-popover>
             </n-descriptions-item>
           </n-descriptions>
         </div>
@@ -80,11 +96,11 @@
         />
       </div>
     </section>
-    </n-scrollbar>
   </div>
 </template>
 
 <script setup lang="ts">
+import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window'
 import { ArrowLeftOutlined } from "@vicons/antd"
 import dayjs from "dayjs"
 import BookApi from "@/api/book"
@@ -95,6 +111,7 @@ import type { Books, Chapters } from "@/types/global"
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
+const appWindow = getCurrentWindow()
 const { withLoading } = useLoading()
 
 const bookId = computed(() => Number(route.query.id) || 0)
@@ -180,17 +197,19 @@ const onPageSizeChange = (size: number) => {
 onMounted(() => {
   loadBook()
   loadChapters()
+  appWindow.setSize(new LogicalSize(800, 600))
 })
 </script>
 
 <style lang="scss" scoped>
 .book-detail {
   position: relative;
-  height: 93%;
+  box-sizing: border-box;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 20px 24px;
+  padding: 18px 24px 16px;
 }
 
 .back-btn {
@@ -207,20 +226,8 @@ onMounted(() => {
   }
 }
 
-.page-scrollbar {
-  flex: 1;
-  min-height: 0;
-
-  :deep(.n-scrollbar-container) {
-    height: 100%;
-  }
-
-  :deep(.n-scrollbar-content) {
-    min-height: 100%;
-  }
-}
-
 .detail-header {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -259,31 +266,40 @@ onMounted(() => {
   text-overflow: ellipsis;
 }
 
-.intro-scrollbar {
-  height: 120px;
-
-  :deep(.n-scrollbar-container) {
-    height: 100%;
-  }
-
-  :deep(.n-scrollbar-content) {
-    padding-right: 8px;
-  }
-}
-
-.intro-content {
+.intro-preview {
   line-height: 1.6;
   font-size: 13px;
   color: var(--color-text-secondary);
   word-break: break-all;
   white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  cursor: help;
+}
+
+:global(.intro-popover-scrollbar .n-scrollbar-container) {
+  height: 100%;
+}
+
+:global(.intro-popover) {
+  box-sizing: border-box;
+  padding: 12px 8px 12px 12px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  line-height: 1.7;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .detail-divider {
-  margin: 16px 0;
+  flex-shrink: 0;
+  margin: 14px 0;
 }
 
 .chapter-section {
+  flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -309,7 +325,8 @@ onMounted(() => {
 }
 
 .chapter-scrollbar {
-  max-height: 420px;
+  flex: 1;
+  min-height: 0;
 
   :deep(.n-scrollbar-container) {
     height: 100%;
