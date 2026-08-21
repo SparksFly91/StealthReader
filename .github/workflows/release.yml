@@ -30,18 +30,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      # 2. 安装 Node.js
+      # 2. 安装 pnpm（必须先于 setup-node 的 pnpm 缓存）
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      # 3. 安装 Node.js
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
           node-version: lts/*
           cache: "pnpm"
-
-      # 3. 安装 pnpm
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 11
 
       # 4. 安装 Rust
       - name: Setup Rust
