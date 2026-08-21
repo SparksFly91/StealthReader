@@ -19,10 +19,6 @@ jobs:
           - platform: "macos-latest"
             args: "--target aarch64-apple-darwin"
 
-          # macOS Intel
-          - platform: "macos-latest"
-            args: "--target x86_64-apple-darwin"
-
           # Windows x64
           - platform: "windows-latest"
             args: ""
@@ -34,21 +30,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      # 3. 安装 Node.js
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 11
-
+      # 2. 安装 Node.js
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
           node-version: lts/*
           cache: "pnpm"
 
+      # 3. 安装 pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
       # 4. 安装 Rust
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Add macOS Apple Silicon target
+        if: matrix.platform == 'macos-latest'
+        run: rustup target add aarch64-apple-darwin
 
       # 5. Rust 缓存（大幅加速后续构建）
       - name: Cache Rust build
@@ -65,6 +66,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__ # 自动替换为 tauri.conf.json 里的版本号
           releaseName: "StealthReader v__VERSION__"
