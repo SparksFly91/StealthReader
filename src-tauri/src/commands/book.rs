@@ -155,19 +155,22 @@ pub async fn book_detail(
 pub async fn chapter_page(
     pool: State<'_, SqlitePool>,
     book_id: i64,
+    keyword: String,
     page: i32,
     limit: i32,
 ) -> Result<ApiResponse<PageResult<Chapters>>, String> {
     let offset = (page - 1) * limit;
     let total: i64 =
-        sqlx::query_scalar::<_, i64>("SELECT COUNT(id) FROM chapters WHERE book_id = ?")
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(id) FROM chapters WHERE book_id = ? AND title LIKE ?")
             .bind(book_id)
+            .bind(format!("%{}%", keyword))
             .fetch_one(&*pool)
             .await
             .map_err(|e| e.to_string())?;
     let chapters =
-        sqlx::query_as::<_, Chapters>("SELECT * FROM chapters WHERE book_id = ? LIMIT ?,?")
+        sqlx::query_as::<_, Chapters>("SELECT * FROM chapters WHERE book_id = ? AND title LIKE ? LIMIT ?,?")
             .bind(book_id)
+            .bind(format!("%{}%", keyword))
             .bind(offset)
             .bind(limit)
             .fetch_all(&*pool)

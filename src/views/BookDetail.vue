@@ -53,8 +53,18 @@
 
     <section class="chapter-section">
       <div class="chapter-header">
-        <span class="chapter-name">章节列表</span>
-        <span class="chapter-count">共 {{ total }} 章</span>
+        <div class="chapter-header-left">
+          <span class="chapter-name">章节列表</span>
+          <span class="chapter-count">共 {{ total }} 章</span>
+        </div>
+        <n-input
+          v-model:value="keyword"
+          class="chapter-search"
+          placeholder="搜索章节"
+          clearable
+          size="small"
+          @update:value="loadChapters"
+        />
       </div>
 
       <n-scrollbar class="chapter-scrollbar">
@@ -122,6 +132,7 @@ const total = ref(0)
 const page = ref(1)
 const limit = ref(50)
 const loadingChapters = ref(false)
+const keyword = ref("")
 
 const goBack = () => router.back()
 
@@ -163,7 +174,7 @@ const loadChapters = async () => {
   loadingChapters.value = true
   try {
     const res = await withLoading(
-      () => BookApi.chapters(bookId.value, page.value, limit.value),
+      () => BookApi.chapters(bookId.value, keyword.value, page.value, limit.value),
       "加载章节中..."
     )
     if (res.code === 0) {
@@ -304,9 +315,22 @@ onMounted(() => {
 .chapter-header {
   flex-shrink: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 8px;
+}
+
+.chapter-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chapter-search {
+  width: 220px;
+  flex-shrink: 0;
 }
 
 .chapter-name {
@@ -337,6 +361,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+  box-sizing: border-box;
   width: 100%;
   padding: 8px 10px;
   border-radius: var(--radius-sm);

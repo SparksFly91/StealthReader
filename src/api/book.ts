@@ -45,12 +45,13 @@ const BookApi = {
   /**
    * 获取书籍章节列表
    * @param bookId 书籍ID
+   * @param keyword 章节标题模糊查询
    * @param page 页码
    * @param limit 每页数量
    * @returns 书籍章节列表
    */
-  chapters: async (bookId: number, page: number, limit: number) => {
-    return await invoke<ApiResponse<PageResult<Chapters>>>("chapter_page", { bookId, page, limit })
+  chapters: async (bookId: number, keyword: string, page: number, limit: number) => {
+    return await invoke<ApiResponse<PageResult<Chapters>>>("chapter_page", { bookId, keyword, page, limit })
   },
   /**
    * 获取章节详情
