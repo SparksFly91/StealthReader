@@ -14,6 +14,11 @@
 <script setup lang="ts">
 import { zhCN, dateZhCN } from "naive-ui"
 import GlobalLoading from "@/components/GlobalLoading.vue"
+import { checkAndUpdate } from "@/utils/updater"
+
+onMounted(() => {
+  checkAndUpdate()
+})
 </script>
 
 <style scoped>

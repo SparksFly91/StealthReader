@@ -13,6 +13,10 @@
     "core:window:allow-set-size",
     "opener:default",
     "dialog:default",
-    "dialog:allow-open"
+    "dialog:allow-open",
+    "updater:default",
+    "updater:allow-check",
+    "process:default",
+    "process:allow-restart"
   ]
 }

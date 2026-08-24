@@ -10,7 +10,22 @@
       <div class="about-info">
         <div class="about-name">幽灵阅读器</div>
         <div class="about-subname">Stealth Reader</div>
-        <div class="about-version">版本 {{ version || "0.0.0" }}</div>
+        <div class="about-meta">
+          <div class="about-version">版本 {{ version || "0.0.0" }}</div>
+          <n-button
+            class="check-update-btn"
+            size="tiny"
+            secondary
+            round
+            :loading="checkingUpdate"
+            @click="onCheckUpdate"
+          >
+            <template #icon>
+              <n-icon :component="SyncOutlined" />
+            </template>
+            {{ checkingUpdate ? "检查中..." : "检查更新" }}
+          </n-button>
+        </div>
       </div>
     </div>
 
@@ -58,16 +73,36 @@ import {
   FontColorsOutlined,
   LockOutlined,
   ScanOutlined,
+  SyncOutlined,
   ThunderboltOutlined,
 } from "@vicons/antd"
 import appIcon from "../../../app-icon.svg"
+import { checkAndUpdate } from "@/utils/updater"
 
+const message = useMessage()
 const year = new Date().getFullYear()
 const version = ref("")
+const checkingUpdate = ref(false)
 
 getVersion().then((v) => {
   version.value = v
 })
+
+const onCheckUpdate = async () => {
+  if (checkingUpdate.value) return
+  checkingUpdate.value = true
+  try {
+    const result = await checkAndUpdate()
+    if (result === "none") {
+      message.success("当前已是最新版本")
+    } else if (result === "error") {
+      message.error("检查更新失败，请稍后重试")
+    }
+    // updated：即将重启应用；cancelled：用户取消，无需提示
+  } finally {
+    checkingUpdate.value = false
+  }
+}
 
 const features = [
   {
@@ -185,6 +220,21 @@ const tech = [
   color: var(--color-accent);
   font-size: 12px;
   font-weight: 600;
+}
+
+.about-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.check-update-btn {
+  margin-top: 6px;
+  font-weight: 500;
+
+  :deep(.n-button__icon) {
+    margin-right: 4px;
+  }
 }
 
 .about-intro {
