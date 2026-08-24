@@ -61,7 +61,42 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      # 7. 构建并发布（核心步骤）
+      # 7. 从 docs/CHANGELOG.md 提取当前 tag 对应版本的更新日志
+      - name: Extract changelog for release
+        id: changelog
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const content = fs.readFileSync("docs/CHANGELOG.md", "utf8");
+            const lines = content.split(/\r?\n/);
+            const marker = "## " + process.env.RELEASE_TAG;
+            const startIdx = lines.findIndex((l) => l.trim().startsWith(marker));
+            if (startIdx === -1) {
+              fs.writeFileSync("release_body.md", "");
+              process.exit(0);
+            }
+            let endIdx = lines.length;
+            for (let i = startIdx + 1; i < lines.length; i++) {
+              if (/^##\s/.test(lines[i])) {
+                endIdx = i;
+                break;
+              }
+            }
+            fs.writeFileSync(
+              "release_body.md",
+              lines.slice(startIdx + 1, endIdx).join("\n").trim()
+            );
+          '
+          {
+            echo "body<<CHANGELOG_BODY_EOF"
+            cat release_body.md
+            echo "CHANGELOG_BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # 8. 构建并发布（核心步骤）
       - name: Build app & publish release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -71,7 +106,7 @@ jobs:
         with:
           tagName: v__VERSION__ # 自动替换为 tauri.conf.json 里的版本号
           releaseName: "StealthReader v__VERSION__"
-          releaseBody: "See the assets to download and install."
+          releaseBody: ${{ steps.changelog.outputs.body }}
           releaseDraft: true # 先创建草稿，手动确认后再发布
           prerelease: false
           args: ${{ matrix.args }}
