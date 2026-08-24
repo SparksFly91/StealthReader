@@ -45,6 +45,26 @@ pub async fn init_pool(app: &AppHandle) -> Result<SqlitePool, sqlx::Error> {
 
         CREATE INDEX IF NOT EXISTS idx_chapters_book 
         ON chapters(book_id, number);
+
+        -- 阅读进度表（稀疏存储：没记录 = 未读）
+        CREATE TABLE IF NOT EXISTS reading_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book_id INTEGER NOT NULL,
+            chapter_id INTEGER NOT NULL,
+            chapter_number INTEGER NOT NULL,    -- 冗余，避免 JOIN 查目录
+            position INTEGER DEFAULT 0,         -- 章内读到第几个字符
+            is_finished BOOLEAN DEFAULT 0,      -- 是否已读完（可用来覆盖 position 判断）
+            read_count INTEGER DEFAULT 1,       -- 阅读次数（可选）
+            first_read_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_read_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            
+            UNIQUE(book_id, chapter_id),        -- 每章一条记录
+            FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+            FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+        );
+
+        -- 索引：快速查某本书的阅读状态
+        CREATE INDEX IF NOT EXISTS idx_progress_book ON reading_progress(book_id, chapter_id, chapter_number);
     ",
     )
     .execute(&pool)

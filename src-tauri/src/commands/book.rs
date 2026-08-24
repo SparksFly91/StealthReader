@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
+use sqlx::{FromRow, SqlitePool};
 use tauri::State;
 use tauri_helper::auto_collect_command;
 
-use crate::models::{ApiResponse, Books, Chapters, PageResult};
+use crate::models::{ApiResponse, Books, Chapters, PageResult, ReadingProgress};
 use crate::services::parser::parse_book;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -13,6 +13,17 @@ pub struct BookSaveReq {
     pub author: String,
     pub cover: String,
     pub introduction: String,
+}
+
+#[derive(Debug, FromRow, Serialize)]
+pub struct ChaptersResp {
+    pub id: i64,
+    pub book_id: i64,
+    pub number: i32,
+    pub title: String,
+    pub content: String,
+    pub total_chars: i32,
+    pub is_read: bool,
 }
 
 /**
@@ -158,24 +169,41 @@ pub async fn chapter_page(
     keyword: String,
     page: i32,
     limit: i32,
-) -> Result<ApiResponse<PageResult<Chapters>>, String> {
+) -> Result<ApiResponse<PageResult<ChaptersResp>>, String> {
     let offset = (page - 1) * limit;
-    let total: i64 =
-        sqlx::query_scalar::<_, i64>("SELECT COUNT(id) FROM chapters WHERE book_id = ? AND title LIKE ?")
-            .bind(book_id)
-            .bind(format!("%{}%", keyword))
-            .fetch_one(&*pool)
-            .await
-            .map_err(|e| e.to_string())?;
-    let chapters =
-        sqlx::query_as::<_, Chapters>("SELECT * FROM chapters WHERE book_id = ? AND title LIKE ? LIMIT ?,?")
-            .bind(book_id)
-            .bind(format!("%{}%", keyword))
-            .bind(offset)
-            .bind(limit)
-            .fetch_all(&*pool)
-            .await
-            .map_err(|e| e.to_string())?;
+    let total: i64 = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(id) FROM chapters WHERE book_id = ? AND title LIKE ?",
+    )
+    .bind(book_id)
+    .bind(format!("%{}%", keyword))
+    .fetch_one(&*pool)
+    .await
+    .map_err(|e| e.to_string())?;
+    let chapters = sqlx::query_as::<_, ChaptersResp>(
+        "SELECT
+            ch.*,
+            CASE
+                WHEN rp.id IS NULL THEN 0
+                ELSE 1
+            END AS is_read
+        FROM
+        chapters AS ch
+        LEFT JOIN reading_progress AS rp ON ch.book_id = rp.book_id
+        AND ch.id = rp.chapter_id
+        AND ch.number = rp.chapter_number
+        WHERE
+        ch.book_id = ?
+        AND ch.title LIKE ?
+        LIMIT
+        ?,?",
+    )
+    .bind(book_id)
+    .bind(format!("%{}%", keyword))
+    .bind(offset)
+    .bind(limit)
+    .fetch_all(&*pool)
+    .await
+    .map_err(|e| e.to_string())?;
     Ok(ApiResponse::success(PageResult {
         total,
         list: chapters,
@@ -200,6 +228,8 @@ pub async fn chapter_detail(
         .fetch_one(&*pool)
         .await
         .map_err(|e| e.to_string())?;
+    // 记录阅读进度
+    record_reading_progress(&*pool, &chapter).await?;
     Ok(ApiResponse::success(chapter))
 }
 
@@ -218,13 +248,82 @@ pub async fn chapter_nav(
     number: i32,
     offset: i32,
 ) -> Result<ApiResponse<Option<Chapters>>, String> {
-    let chapter = sqlx::query_as::<_, Chapters>(
-        "SELECT * FROM chapters WHERE book_id = ? AND number = ?",
+    // 查询相邻章节
+    let chapter =
+        sqlx::query_as::<_, Chapters>("SELECT * FROM chapters WHERE book_id = ? AND number = ?")
+            .bind(book_id)
+            .bind(number + offset)
+            .fetch_optional(&*pool)
+            .await
+            .map_err(|e| e.to_string())?;
+    if let Some(chapter) = &chapter {
+        record_reading_progress(&*pool, chapter).await?;
+    }
+    Ok(ApiResponse::success(chapter))
+}
+
+/// 记录阅读进度：更新书籍最后阅读位置 + 写入阅读记录
+async fn record_reading_progress(pool: &SqlitePool, chapter: &Chapters) -> Result<(), String> {
+    let is_exist_last_record = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS ( SELECT 1 FROM books WHERE id = ? AND last_read_chapter_id = ? )",
     )
-    .bind(book_id)
-    .bind(number + offset)
-    .fetch_optional(&*pool)
+    .bind(chapter.book_id)
+    .bind(chapter.id)
+    .fetch_one(pool)
     .await
     .map_err(|e| e.to_string())?;
-    Ok(ApiResponse::success(chapter))
+    let last_read_time = chrono::Utc::now().naive_utc();
+    // 记录书籍最后一次阅读进度
+    if is_exist_last_record {
+        sqlx::query("UPDATE books SET last_read_time = ?, last_read_position = ? WHERE id = ?")
+            .bind(last_read_time)
+            .bind(0)
+            .bind(chapter.book_id)
+            .execute(pool)
+            .await
+            .map_err(|e| e.to_string())?;
+    } else {
+        sqlx::query("UPDATE books SET last_read_chapter_id = ?, last_read_time = ?, last_read_position = ? WHERE id = ?")
+        .bind(chapter.id)
+        .bind(last_read_time)
+        .bind(0)
+        .bind(chapter.book_id)
+        .execute(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+    }
+
+    let is_read = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS ( SELECT 1 FROM reading_progress WHERE book_id = ? AND chapter_id = ? )",
+    )
+    .bind(chapter.book_id)
+    .bind(chapter.id)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+    if is_read {
+        // 更新阅读记录
+        sqlx::query(
+            "UPDATE reading_progress SET read_count = read_count + 1, last_read_time = ? WHERE book_id = ? AND chapter_id = ?",
+        )
+        .bind(last_read_time)
+        .bind(chapter.book_id)
+        .bind(chapter.id)
+        .execute(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+    } else {
+        // 记录阅读记录
+        sqlx::query(
+            "INSERT INTO reading_progress (book_id, chapter_id, chapter_number) VALUES (?, ?, ?)",
+        )
+        .bind(chapter.book_id)
+        .bind(chapter.id)
+        .bind(chapter.number)
+        .execute(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
 }

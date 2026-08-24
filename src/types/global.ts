@@ -33,7 +33,8 @@ interface Chapters {
   number: number
   title: string
   content: string
-  total_chars: number
+  total_chars: number,
+  is_read: boolean,
 }
 
 interface BookSaveParams {

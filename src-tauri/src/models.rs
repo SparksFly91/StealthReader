@@ -72,3 +72,16 @@ pub struct Chapters {
     pub content: String,
     pub total_chars: i32,
 }
+
+#[derive(Debug, FromRow, Serialize, Deserialize, Clone)]
+pub struct ReadingProgress {
+    pub id: i64,
+    pub book_id: i64,
+    pub chapter_id: i64,
+    pub chapter_number: i32,
+    pub position: i32,
+    pub is_finished: bool,
+    pub read_count: i32,
+    pub first_read_time: chrono::NaiveDateTime,
+    pub last_read_time: chrono::NaiveDateTime,
+}

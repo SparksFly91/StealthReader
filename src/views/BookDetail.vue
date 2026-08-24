@@ -78,7 +78,11 @@
             responsive="screen"
           >
             <n-gi v-for="ch in chapterList" :key="ch.id">
-              <div class="chapter-item" @click="readChapter(ch)">
+              <div
+                class="chapter-item"
+                :class="{ 'is-read': ch.is_read }"
+                @click="readChapter(ch)"
+              >
                 <span class="chapter-index">{{ ch.number }}</span>
                 <span class="chapter-title" :title="ch.title">{{ ch.title }}</span>
                 <span class="chapter-chars">{{ ch.total_chars }} 字</span>
@@ -370,6 +374,16 @@ onMounted(() => {
 
   &:hover {
     background-color: var(--color-surface-hover);
+  }
+
+  &.is-read {
+    opacity: 0.45;
+
+    .chapter-title,
+    .chapter-index,
+    .chapter-chars {
+      color: var(--color-text-secondary);
+    }
   }
 }
 
