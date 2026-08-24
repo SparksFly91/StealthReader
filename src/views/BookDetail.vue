@@ -20,31 +20,44 @@
             <n-descriptions-item label="总章节">{{ book?.total_chapters ?? 0 }}</n-descriptions-item>
             <n-descriptions-item label="总字数">{{ formatChars(book?.total_chars) }}</n-descriptions-item>
             <n-descriptions-item label="导入时间">{{ formatTime(book?.create_time) }}</n-descriptions-item>
-            <n-descriptions-item label="上次阅读">{{ formatTime(book?.last_read_time) }}</n-descriptions-item>
-            <n-descriptions-item label="阅读进度">{{ readProgress }}</n-descriptions-item>
-            <n-descriptions-item label="简介" :span="2">
-              <n-popover
-                trigger="hover"
-                placement="bottom-start"
-                :show-arrow="true"
-                content-class="intro-popover-panel"
-                :content-style="{
-                  width: '520px',
-                  maxWidth: 'calc(100vw - 64px)',
-                  maxHeight: '180px',
-                  padding: '0',
-                  overflow: 'hidden',
-                }"
-              >
-                <template #trigger>
-                  <div class="intro-preview">{{ book?.introduction || "暂无简介" }}</div>
-                </template>
-                <n-scrollbar class="intro-popover-scrollbar" style="height: 180px">
-                  <div class="intro-popover">{{ book?.introduction || "暂无简介" }}</div>
-                </n-scrollbar>
-              </n-popover>
-            </n-descriptions-item>
           </n-descriptions>
+
+          <div class="progress-row">
+            <n-button v-if="continueInfo" class="continue-btn" @click="continueRead">
+              <template #default>
+                <div class="continue-content">
+                  <div class="continue-action">点击继续阅读</div>
+                  <div class="continue-main">
+                    <span class="continue-prefix">阅读到</span>
+                    <span class="continue-title" :title="continueInfo.title">{{ continueTitle }}</span>
+                    <span class="continue-percent">{{ continuePercent }}%</span>
+                  </div>
+                  <div class="continue-time">上次阅读 {{ formatTime(book?.last_read_time) }}</div>
+                </div>
+              </template>
+            </n-button>
+            <n-popover
+              class="intro-popover-wrap"
+              trigger="hover"
+              placement="bottom-start"
+              :show-arrow="true"
+              content-class="intro-popover-panel"
+              :content-style="{
+                width: '520px',
+                maxWidth: 'calc(100vw - 64px)',
+                maxHeight: '180px',
+                padding: '0',
+                overflow: 'hidden',
+              }"
+            >
+              <template #trigger>
+                <div class="intro-preview">{{ book?.introduction || "暂无简介" }}</div>
+              </template>
+              <n-scrollbar class="intro-popover-scrollbar" style="height: 180px">
+                <div class="intro-popover">{{ book?.introduction || "暂无简介" }}</div>
+              </n-scrollbar>
+            </n-popover>
+          </div>
         </div>
       </div>
     </section>
@@ -137,6 +150,7 @@ const page = ref(1)
 const limit = ref(50)
 const loadingChapters = ref(false)
 const keyword = ref("")
+const lastReadChapter = ref<Chapters | null>(null)
 
 const goBack = () => router.back()
 
@@ -144,11 +158,30 @@ const readChapter = (ch: Chapters) => {
   router.push({ name: "Reader", query: { id: ch.id } })
 }
 
-const readProgress = computed(() => {
+const continueRead = () => {
+  const ch = lastReadChapter.value
+  if (ch) {
+    router.push({ name: "Reader", query: { id: ch.id } })
+  }
+}
+
+const continueInfo = computed(() => {
   const b = book.value
-  if (!b || b.total_chapters <= 0) return "—"
-  const percent = Math.round((b.last_read_chapter_id / b.total_chapters) * 100)
-  return `第 ${b.last_read_chapter_id} 章 · ${percent}%`
+  if (!b || b.last_read_chapter_id <= 0) return null
+  return lastReadChapter.value
+})
+
+const continueTitle = computed(() => {
+  const t = lastReadChapter.value?.title
+  if (!t) return ""
+  return t.length > 5 ? `${t.slice(0, 5)}…` : t
+})
+
+const continuePercent = computed(() => {
+  const b = book.value
+  const ch = lastReadChapter.value
+  if (!b || b.total_chapters <= 0 || !ch) return 0
+  return Math.round((ch.number / b.total_chapters) * 100)
 })
 
 const formatChars = (chars?: number) => {
@@ -168,8 +201,22 @@ const loadBook = async () => {
   const res = await withLoading(() => BookApi.detail(bookId.value), "加载中...")
   if (res.code === 0) {
     book.value = res.data
+    if (res.data.last_read_chapter_id > 0) {
+      await loadLastReadChapter(res.data.last_read_chapter_id)
+    }
   } else {
     message.error(res.msg)
+  }
+}
+
+const loadLastReadChapter = async (chapterId: number) => {
+  try {
+    const res = await BookApi.chapterDetail(chapterId)
+    if (res.code === 0) {
+      lastReadChapter.value = res.data
+    }
+  } catch {
+    lastReadChapter.value = null
   }
 }
 
@@ -277,17 +324,99 @@ onMounted(() => {
   text-overflow: ellipsis;
 }
 
+.intro-popover-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
 .intro-preview {
+  box-sizing: border-box;
+  height: var(--progress-height);
+  min-width: 0;
   line-height: 1.6;
   font-size: 13px;
   color: var(--color-text-secondary);
   word-break: break-all;
   white-space: pre-wrap;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   overflow: hidden;
   cursor: help;
+  padding: 10px 0;
+  border-radius: var(--radius-sm);
+}
+
+.progress-row {
+  --progress-height: 84px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.continue-btn {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 220px;
+  height: var(--progress-height);
+  border-radius: var(--radius-card);
+  padding: 10px 16px;
+  text-align: left;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  :deep(.n-button__content) {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.continue-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+}
+
+.continue-action {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+
+.continue-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.continue-prefix {
+  color: var(--color-text-secondary);
+}
+
+.continue-title {
+  max-width: 5em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-primary);
+}
+
+.continue-percent {
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.continue-time {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
 }
 
 :global(.intro-popover-scrollbar .n-scrollbar-container) {

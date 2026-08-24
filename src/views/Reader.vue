@@ -1,7 +1,9 @@
 <template>
   <div class="glass-panel" :style="readerStyle" data-tauri-drag-region @mousedown="onWindowMouseDown">
     <div class="reading-wrap">
-      <div v-if="currentPage == 0" class="chapter-name">{{ chapter?.title || "加载中..." }}</div>
+      <div class="chapter-name" :class="{ 'chapter-name--hidden': currentPage !== 0 }">
+        {{ chapter?.title || "加载中..." }}
+      </div>
 
       <div ref="pageEl" class="page-body" @click="onPageClick">
         <div class="page-text">{{ currentText }}</div>
@@ -250,6 +252,10 @@ onUnmounted(() => {
   font-weight: 700;
   color: var(--reader-font-color);
   margin-bottom: 20px;
+}
+
+.chapter-name--hidden {
+  visibility: hidden;
 }
 
 .page-body {
