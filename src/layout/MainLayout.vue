@@ -23,9 +23,13 @@ const isMacos = navigator.userAgent.includes("Mac OS X")
 .container {
   width: 100vw;
   height: 100vh;
-  background: rgba(255, 255, 255, 1);
+  background: var(--color-window-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--color-border);
+
+  :deep(.n-layout) {
+    background: transparent;
+  }
 }
 
 .header {
@@ -35,6 +39,6 @@ const isMacos = navigator.userAgent.includes("Mac OS X")
 
 .content {
   background: transparent;
-  height: calc(100vh - 40px);
+  height: calc(100vh - var(--titlebar-height));
 }
 </style>

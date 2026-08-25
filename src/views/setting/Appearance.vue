@@ -38,6 +38,10 @@ const settingStore = useSettingStore()
 const theme = ref(settingStore.appearance.theme)
 const showShadow = ref(settingStore.appearance.showShadow)
 
+watch(theme, (newVal) => {
+  settingStore.appearance.theme = newVal
+})
+
 watch(showShadow, (newVal) => {
   settingStore.appearance.showShadow = newVal
   getCurrentWindow().setShadow(newVal)
