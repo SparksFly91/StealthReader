@@ -76,7 +76,7 @@ import {
   SyncOutlined,
   ThunderboltOutlined,
 } from "@vicons/antd"
-import appIcon from "../../../app-icon.svg"
+import appIcon from "../../../app-icon.png"
 import { checkAndPrompt } from "@/utils/updater"
 
 const message = useMessage()

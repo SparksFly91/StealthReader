@@ -1,31 +1,29 @@
 <template>
   <n-modal :show="showUpdateModal" preset="card" :title="modalTitle" :bordered="false" :closable="!busy"
-    :mask-closable="false" :close-on-esc="false" style="width: 430px" @close="cancelUpdate">
+    :mask-closable="false" :close-on-esc="false" content-scrollable :segmented="{ content: true, footer: true }"
+    :style="{ width: '60vw', height: '50vh' }" @close="cancelUpdate">
     <template #header-extra>
       <span v-if="updateInfo" class="update-current">当前 v{{ updateInfo.currentVersion }}</span>
     </template>
 
-    <div class="update-body">
-      <n-scrollbar class="update-scroll">
-        <div v-if="renderedBody" class="markdown-body" v-html="renderedBody" />
-        <n-empty v-else description="暂无更新说明" />
-      </n-scrollbar>
-    </div>
-
-    <div v-if="downloading || installing" class="update-progress">
-      <n-progress type="line" :percentage="progress" :processing="downloading" indicator-placement="inside"
-        :height="18" />
-      <div class="progress-hint">{{ progressHint }}</div>
-    </div>
+    <div v-if="renderedBody" class="markdown-body" v-html="renderedBody" />
+    <n-empty v-else description="暂无更新说明" />
 
     <template #footer>
       <div class="update-footer">
-        <n-button quaternary :disabled="busy" @click="skipVersion">跳过此版本</n-button>
-        <div class="update-footer-right">
-          <n-button v-if="!busy" @click="cancelUpdate">取消</n-button>
-          <n-button type="primary" :loading="downloading" @click="startUpdate">
-            {{ installing ? "安装中..." : downloading ? "下载中..." : "立即更新" }}
-          </n-button>
+        <div v-if="downloading || installing" class="update-progress">
+          <n-progress type="line" :percentage="progress" :processing="downloading" indicator-placement="inside"
+            :height="18" />
+          <div class="progress-hint">{{ progressHint }}</div>
+        </div>
+        <div class="update-footer-actions">
+          <n-button quaternary size="small" :disabled="busy" @click="skipVersion">跳过此版本</n-button>
+          <div class="update-footer-right">
+            <n-button size="small" v-if="!busy" @click="cancelUpdate">取消</n-button>
+            <n-button size="small" type="primary" :loading="downloading" @click="startUpdate">
+              {{ installing ? "安装中..." : downloading ? "下载中..." : "立即更新" }}
+            </n-button>
+          </div>
         </div>
       </div>
     </template>
@@ -75,12 +73,6 @@ const progressHint = computed(() => {
 .update-current {
   font-size: 12px;
   color: var(--color-text-secondary);
-}
-
-.update-body {
-  .update-scroll {
-    height: 340px;
-  }
 }
 
 .markdown-body {
@@ -198,7 +190,7 @@ const progressHint = computed(() => {
 }
 
 .update-progress {
-  margin-top: 12px;
+  width: 100%;
 }
 
 .progress-hint {
@@ -209,6 +201,13 @@ const progressHint = computed(() => {
 }
 
 .update-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.update-footer-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
