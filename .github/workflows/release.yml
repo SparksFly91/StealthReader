@@ -40,7 +40,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: lts/*
+          node-version: 24
           cache: "pnpm"
 
       # 4. 安装 Rust
@@ -93,7 +93,9 @@ jobs:
           {
             echo "body<<CHANGELOG_BODY_EOF"
             cat release_body.md
-            echo "CHANGELOG_BODY_EOF"
+            # release_body.md is deliberately trimmed and may not end in a newline.
+            # Ensure the closing delimiter occupies its own line in GITHUB_OUTPUT.
+            printf '\nCHANGELOG_BODY_EOF\n'
           } >> "$GITHUB_OUTPUT"
 
       # 8. 构建并发布（核心步骤）
