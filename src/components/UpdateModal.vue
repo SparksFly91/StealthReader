@@ -1,15 +1,6 @@
 <template>
-  <n-modal
-    :show="showUpdateModal"
-    preset="card"
-    :title="modalTitle"
-    :bordered="false"
-    :closable="!busy"
-    :mask-closable="false"
-    :close-on-esc="false"
-    style="width: 560px"
-    @close="cancelUpdate"
-  >
+  <n-modal :show="showUpdateModal" preset="card" :title="modalTitle" :bordered="false" :closable="!busy"
+    :mask-closable="false" :close-on-esc="false" style="width: 430px" @close="cancelUpdate">
     <template #header-extra>
       <span v-if="updateInfo" class="update-current">当前 v{{ updateInfo.currentVersion }}</span>
     </template>
@@ -22,13 +13,8 @@
     </div>
 
     <div v-if="downloading || installing" class="update-progress">
-      <n-progress
-        type="line"
-        :percentage="progress"
-        :processing="downloading"
-        indicator-placement="inside"
-        :height="18"
-      />
+      <n-progress type="line" :percentage="progress" :processing="downloading" indicator-placement="inside"
+        :height="18" />
       <div class="progress-hint">{{ progressHint }}</div>
     </div>
 
