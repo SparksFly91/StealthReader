@@ -77,7 +77,7 @@ import {
   ThunderboltOutlined,
 } from "@vicons/antd"
 import appIcon from "../../../app-icon.svg"
-import { checkAndUpdate } from "@/utils/updater"
+import { checkAndPrompt } from "@/utils/updater"
 
 const message = useMessage()
 const year = new Date().getFullYear()
@@ -92,13 +92,13 @@ const onCheckUpdate = async () => {
   if (checkingUpdate.value) return
   checkingUpdate.value = true
   try {
-    const result = await checkAndUpdate()
+    const result = await checkAndPrompt()
     if (result === "none") {
       message.success("当前已是最新版本")
     } else if (result === "error") {
       message.error("检查更新失败，请稍后重试")
     }
-    // updated：即将重启应用；cancelled：用户取消，无需提示
+    // prompting：已展示更新弹窗，由弹窗处理后续流程
   } finally {
     checkingUpdate.value = false
   }

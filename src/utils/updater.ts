@@ -1,54 +1,137 @@
-import { check, type Update } from "@tauri-apps/plugin-updater"
-import { ask } from "@tauri-apps/plugin-dialog"
+import { ref } from "vue"
+import { check, type Update, type DownloadEvent } from "@tauri-apps/plugin-updater"
 import { relaunch } from "@tauri-apps/plugin-process"
 
-/**
- * 更新检查结果
- * - updated：已确认更新并开始安装（随后应用重启）
- * - none：当前已是最新版本
- * - cancelled：存在更新但用户取消
- * - error：检查或安装过程出错
- */
-export type CheckUpdateResult = "updated" | "none" | "cancelled" | "error"
+export type CheckPromptResult = "none" | "error" | "prompting"
 
-/**
- * 仅检查是否有可用更新，返回 Update 对象或 null
- */
-export async function checkUpdate(): Promise<Update | null> {
-  return await check()
+// 当前待更新的 Update 对象（非响应式，避免代理破坏资源句柄）
+let currentUpdate: Update | null = null
+
+export const checking = ref(false)
+export const downloading = ref(false)
+export const installing = ref(false)
+export const showUpdateModal = ref(false)
+export const progress = ref(0)
+export const downloadedBytes = ref(0)
+export const totalBytes = ref(0)
+
+export const updateInfo = ref<{
+  currentVersion: string
+  version: string
+  date?: string
+  body?: string
+} | null>(null)
+
+const SKIPPED_KEY = "skippedUpdateVersion"
+
+function getSkippedVersion(): string | null {
+  try {
+    return localStorage.getItem(SKIPPED_KEY)
+  } catch {
+    return null
+  }
+}
+
+function setSkippedVersion(version: string) {
+  try {
+    localStorage.setItem(SKIPPED_KEY, version)
+  } catch {
+    // ignore
+  }
+}
+
+export function formatBytes(bytes: number): string {
+  if (bytes <= 0) return "0 B"
+  const units = ["B", "KB", "MB", "GB"]
+  let v = bytes
+  let i = 0
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024
+    i++
+  }
+  return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${units[i]}`
 }
 
 /**
- * 询问用户是否立即更新，确认后下载安装并重启应用
- * @param update 更新对象
- * @returns true=已确认并开始安装；false=用户取消
+ * 检查更新，若有可用更新则展示更新弹窗
+ * @returns none=无更新/已跳过；error=检查出错；prompting=已展示弹窗等待用户操作
  */
-export async function promptAndInstall(update: Update): Promise<boolean> {
-  const yes = await ask(
-    `发现新版本 ${update.version}，是否现在更新？\n\n${update.body || ""}`,
-    { title: "发现更新", kind: "info" }
-  )
-  if (!yes) return false
-
-  await update.downloadAndInstall()
-  await relaunch()
-  return true
-}
-
-/**
- * 一键检查并更新（完整流程）。
- * 适合应用启动时静默调用：无更新、用户取消或出错均不打扰用户。
- * @returns 更新结果状态
- */
-export async function checkAndUpdate(): Promise<CheckUpdateResult> {
+export async function checkAndPrompt(): Promise<CheckPromptResult> {
+  if (checking.value || downloading.value || installing.value) return "none"
+  checking.value = true
   try {
     const update = await check()
     if (!update) return "none"
+    if (getSkippedVersion() === update.version) return "none"
 
-    const installed = await promptAndInstall(update)
-    return installed ? "updated" : "cancelled"
+    currentUpdate = update
+    updateInfo.value = {
+      currentVersion: update.currentVersion,
+      version: update.version,
+      date: update.date,
+      body: update.body,
+    }
+    progress.value = 0
+    downloadedBytes.value = 0
+    totalBytes.value = 0
+    showUpdateModal.value = true
+    return "prompting"
   } catch (error) {
     console.error("检查更新失败:", error)
     return "error"
+  } finally {
+    checking.value = false
   }
+}
+
+/**
+ * 开始下载并安装更新（带进度回调），完成后重启应用
+ */
+export async function startUpdate(): Promise<void> {
+  if (!currentUpdate || downloading.value || installing.value) return
+  downloading.value = true
+  progress.value = 0
+  downloadedBytes.value = 0
+  totalBytes.value = 0
+  try {
+    await currentUpdate.download((event: DownloadEvent) => {
+      if (event.event === "Started") {
+        totalBytes.value = event.data.contentLength ?? 0
+      } else if (event.event === "Progress") {
+        downloadedBytes.value += event.data.chunkLength
+        if (totalBytes.value > 0) {
+          progress.value = Math.min(
+            100,
+            Math.round((downloadedBytes.value / totalBytes.value) * 100)
+          )
+        }
+      }
+    })
+    downloading.value = false
+    installing.value = true
+    await currentUpdate.install()
+    await relaunch()
+  } catch (error) {
+    console.error("更新失败:", error)
+    downloading.value = false
+    installing.value = false
+    throw error
+  }
+}
+
+/** 跳过当前版本：记录已跳过版本并关闭弹窗 */
+export function skipVersion() {
+  if (currentUpdate) {
+    setSkippedVersion(currentUpdate.version)
+  }
+  currentUpdate = null
+  updateInfo.value = null
+  showUpdateModal.value = false
+}
+
+/** 取消更新：关闭弹窗 */
+export function cancelUpdate() {
+  currentUpdate = null
+  updateInfo.value = null
+  showUpdateModal.value = false
 }

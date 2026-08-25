@@ -1,14 +1,13 @@
 <template>
-  <n-config-provider
-    :locale="zhCN"
-    :data-locale="dateZhCN"
-    :theme="isDark ? darkTheme : null"
-  >
+  <n-config-provider :locale="zhCN" :data-locale="dateZhCN" :theme="isDark ? darkTheme : null">
     <n-message-provider>
       <n-notification-provider>
         <n-dialog-provider>
-          <GlobalLoading />
-          <RouterView />
+          <n-modal-provider>
+            <GlobalLoading />
+            <UpdateModal />
+            <RouterView />
+          </n-modal-provider>
         </n-dialog-provider>
       </n-notification-provider>
     </n-message-provider>
@@ -18,7 +17,8 @@
 <script setup lang="ts">
 import { zhCN, dateZhCN, darkTheme } from "naive-ui"
 import GlobalLoading from "@/components/GlobalLoading.vue"
-import { checkAndUpdate } from "@/utils/updater"
+import UpdateModal from "@/components/UpdateModal.vue"
+import { checkAndPrompt } from "@/utils/updater"
 import { useSettingStore } from "@/stores/setting"
 
 const settingStore = useSettingStore()
@@ -40,7 +40,7 @@ const onSystemThemeChange = (e: MediaQueryListEvent) => {
 }
 
 onMounted(() => {
-  checkAndUpdate()
+  checkAndPrompt()
   media.addEventListener("change", onSystemThemeChange)
 })
 
@@ -49,6 +49,4 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>
