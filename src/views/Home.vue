@@ -336,6 +336,7 @@ onMounted(() => {
   box-shadow: var(--shadow-card);
   cursor: pointer;
   transition: color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  margin-right: 10px;
 
   &:hover {
     color: var(--color-accent);

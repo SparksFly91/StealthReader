@@ -25,7 +25,7 @@ const isMacos = navigator.userAgent.includes("Mac OS X")
   height: 100vh;
   background: var(--color-window-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--color-border);
+  // border: 1px solid var(--color-border);
 
   :deep(.n-layout) {
     background: transparent;

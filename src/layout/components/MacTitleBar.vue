@@ -53,7 +53,7 @@ function close() {
       width: 12px;
       height: 12px;
       padding: 0;
-      border-radius: 50%;
+      border-radius: var(--radius-sm);
       border: 0.5px solid rgba(0, 0, 0, 0.15);
       display: flex;
       align-items: center;
