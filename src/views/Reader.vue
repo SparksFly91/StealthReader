@@ -100,8 +100,10 @@ const paginate = () => {
       logicalLines.push("")
       continue
     }
-    for (let i = 0; i < para.length; i += charsPerLine) {
-      logicalLines.push(para.slice(i, i + charsPerLine))
+    // 段落首行缩进两格（使用全角空格）
+    const indented = "　　" + para
+    for (let i = 0; i < indented.length; i += charsPerLine) {
+      logicalLines.push(indented.slice(i, i + charsPerLine))
     }
   }
 
@@ -201,6 +203,8 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown)
   window.removeEventListener("resize", onResize)
+  // 离开阅读模式时，恢复主窗口的阴影设置
+  appWindow.setShadow(settingStore.appearance.showShadow)
 })
 </script>
 
@@ -211,6 +215,7 @@ onUnmounted(() => {
   width: 100vw;
   height: 100vh;
   background: var(--reader-background-color);
+  border-radius: var(--radius-window);
   /* border: 1px solid rgba(255, 255, 255, 0.2); */
   padding: 10px;
   color: var(--reader-font-color);
