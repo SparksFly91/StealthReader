@@ -25,6 +25,7 @@
   /* 圆角 */
   --radius-card: 16px;
   --radius-sm: 10px;
+  --radius-window: 12px;
 
   /* 尺寸 */
   --titlebar-height: 38px;

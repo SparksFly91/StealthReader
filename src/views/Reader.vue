@@ -1,11 +1,17 @@
 <template>
-  <div class="glass-panel" :style="readerStyle" data-tauri-drag-region @mousedown="onWindowMouseDown">
+  <div
+    class="glass-panel"
+    :style="readerStyle"
+    data-tauri-drag-region
+    @mousedown="onWindowMouseDown"
+    @contextmenu.prevent="onContextMenu"
+  >
     <div class="reading-wrap">
       <div class="chapter-name" :class="{ 'chapter-name--hidden': currentPage !== 0 }">
         {{ chapter?.title || "加载中..." }}
       </div>
 
-      <div ref="pageEl" class="page-body" @click="onPageClick">
+      <div ref="pageEl" class="page-body">
         <div class="page-text">{{ currentText }}</div>
       </div>
 
@@ -26,6 +32,67 @@
         </div>
       </div>
     </div>
+
+    <n-popover
+      v-model:show="menuShow"
+      trigger="manual"
+      :x="menuX"
+      :y="menuY"
+      placement="bottom-start"
+      :show-arrow="false"
+      @clickoutside="menuShow = false"
+    >
+      <div class="ctx-menu" @contextmenu.prevent>
+        <div class="ctx-item">
+          <span class="ctx-label">字体颜色</span>
+          <div class="color-picker-control">
+            <n-color-picker v-model:value="menuFontColor" show-alpha :modes="['hex']" placement="bottom-end">
+              <template #trigger="{ value, onClick, ref: triggerRef }">
+                <div
+                  :ref="triggerRef"
+                  class="color-swatch"
+                  :style="{ backgroundColor: value || '#000000' }"
+                  role="button"
+                  tabindex="0"
+                  aria-label="选择字体颜色"
+                  @click="onClick"
+                  @keydown.enter="onClick"
+                  @keydown.space.prevent="onClick"
+                />
+              </template>
+            </n-color-picker>
+            <div class="color-values">
+              <span>{{ getColorDetails(menuFontColor).color }}</span>
+              <small>透明度 {{ getColorDetails(menuFontColor).opacity }}%</small>
+            </div>
+          </div>
+        </div>
+        <div class="ctx-item">
+          <span class="ctx-label">背景颜色</span>
+          <div class="color-picker-control">
+            <n-color-picker v-model:value="menuBackgroundColor" show-alpha :modes="['hex']" placement="bottom-end">
+              <template #trigger="{ value, onClick, ref: triggerRef }">
+                <div
+                  :ref="triggerRef"
+                  class="color-swatch"
+                  :style="{ backgroundColor: value || '#ffffff' }"
+                  role="button"
+                  tabindex="0"
+                  aria-label="选择背景颜色"
+                  @click="onClick"
+                  @keydown.enter="onClick"
+                  @keydown.space.prevent="onClick"
+                />
+              </template>
+            </n-color-picker>
+            <div class="color-values">
+              <span>{{ getColorDetails(menuBackgroundColor).color }}</span>
+              <small>透明度 {{ getColorDetails(menuBackgroundColor).opacity }}%</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </n-popover>
   </div>
 </template>
 
@@ -100,8 +167,10 @@ const paginate = () => {
       logicalLines.push("")
       continue
     }
-    for (let i = 0; i < para.length; i += charsPerLine) {
-      logicalLines.push(para.slice(i, i + charsPerLine))
+    // 段落首行缩进两格（使用全角空格）
+    const indented = "　　" + para
+    for (let i = 0; i < indented.length; i += charsPerLine) {
+      logicalLines.push(indented.slice(i, i + charsPerLine))
     }
   }
 
@@ -121,20 +190,56 @@ const nextPage = () => {
   if (currentPage.value < pages.value.length - 1) currentPage.value++
 }
 
-const onPageClick = (e: MouseEvent) => {
-  const el = e.currentTarget as HTMLElement
-  const rect = el.getBoundingClientRect()
-  if (e.clientX - rect.left < rect.width / 2) prevPage()
-  else nextPage()
+// 右键快捷设置菜单（字体颜色 / 背景颜色）
+const menuShow = ref(false)
+const menuX = ref(0)
+const menuY = ref(0)
+const menuFontColor = ref(settingStore.reader.fontColor)
+const menuBackgroundColor = ref(settingStore.reader.backgroundColor)
+
+const getColorDetails = (value: string | null) => {
+  const color = value || "#000000"
+  const match =
+    color.match(/^#([\da-f]{6})([\da-f]{2})$/i) ||
+    color.match(/^#([\da-f]{3})([\da-f])$/i)
+  const alphaMatch = color.match(/^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d.]+)\s*\)$/i)
+  const alpha = match
+    ? Math.round((parseInt(match[2].length === 1 ? match[2] + match[2] : match[2], 16) / 255) * 100)
+    : alphaMatch
+      ? Math.round(Number(alphaMatch[1]) * 100)
+      : 100
+
+  return {
+    color: match ? `#${match[1].toUpperCase()}` : color,
+    opacity: Math.min(100, Math.max(0, alpha)),
+  }
 }
 
+const onContextMenu = (e: MouseEvent) => {
+  menuX.value = e.clientX
+  menuY.value = e.clientY
+  menuShow.value = true
+}
+
+watch(menuFontColor, (v) => {
+  if (v) settingStore.reader.fontColor = v
+})
+watch(menuBackgroundColor, (v) => {
+  if (v) settingStore.reader.backgroundColor = v
+})
+
 const onWindowMouseDown = (e: MouseEvent) => {
+  if (e.button !== 0) return
   const target = e.target as HTMLElement | null
   if (target?.closest("button, a, input, textarea, select, [role='button']")) return
   void appWindow.startDragging()
 }
 
 const onKeydown = (e: KeyboardEvent) => {
+  if (e.key === "Escape") {
+    menuShow.value = false
+    return
+  }
   if (e.key === "ArrowLeft") {
     e.preventDefault()
     switchChapter(-1)
@@ -201,6 +306,8 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown)
   window.removeEventListener("resize", onResize)
+  // 离开阅读模式时，恢复主窗口的阴影设置
+  appWindow.setShadow(settingStore.appearance.showShadow)
 })
 </script>
 
@@ -211,6 +318,7 @@ onUnmounted(() => {
   width: 100vw;
   height: 100vh;
   background: var(--reader-background-color);
+  border-radius: var(--radius-window);
   /* border: 1px solid rgba(255, 255, 255, 0.2); */
   padding: 10px;
   color: var(--reader-font-color);
@@ -261,7 +369,6 @@ onUnmounted(() => {
 .page-body {
   flex: 1;
   min-height: 0;
-  cursor: pointer;
 }
 
 .page-text {
@@ -321,5 +428,63 @@ onUnmounted(() => {
 
 .nav-back {
   padding: 0 4px;
+}
+
+.ctx-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 176px;
+}
+
+.ctx-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ctx-label {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.color-picker-control {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+  background-size: 8px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.color-swatch:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.color-values {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.color-values small {
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 11px;
 }
 </style>

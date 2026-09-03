@@ -15,8 +15,18 @@
 <script setup lang="ts">
 import WindowsTitleBar from "@/layout/components/WindowsTitleBar.vue"
 import MacTitleBar from "@/layout/components/MacTitleBar.vue"
+import { getCurrentWindow } from "@tauri-apps/api/window"
+import { useSettingStore } from "@/stores/setting"
 
 const isMacos = navigator.userAgent.includes("Mac OS X")
+
+const appWindow = getCurrentWindow()
+const settingStore = useSettingStore()
+
+onMounted(() => {
+  // 从阅读模式返回时，恢复主窗口的阴影设置（避免停留在阅读器的阴影状态）
+  appWindow.setShadow(settingStore.appearance.showShadow)
+})
 </script>
 
 <style lang="scss" scoped>
@@ -25,6 +35,8 @@ const isMacos = navigator.userAgent.includes("Mac OS X")
   height: 100vh;
   background: var(--color-window-bg);
   backdrop-filter: blur(20px);
+  border-radius: var(--radius-window);
+  overflow: hidden;
   // border: 1px solid var(--color-border);
 
   :deep(.n-layout) {
