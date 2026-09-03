@@ -1,0 +1,8 @@
+{
+  "smtp_host": "smtp.163.com",
+  "smtp_port": 465,
+  "smtp_username": "your_email@163.com",
+  "smtp_password": "your_16_digit_authorization_code",
+  "from_address": "your_email@163.com",
+  "to_address": "your_email@163.com"
+}

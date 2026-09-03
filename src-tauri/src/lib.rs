@@ -3,6 +3,7 @@ mod models;
 mod services;
 
 use commands::book::*;
+use commands::feedback::*;
 use services::db::init_pool;
 use tauri::Manager;
 

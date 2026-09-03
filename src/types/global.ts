@@ -45,4 +45,17 @@ interface BookSaveParams {
   introduction: string
 }
 
-export type { ApiResponse, PageResult, Books, Chapters, BookSaveParams }
+interface FeedbackImage {
+  cid: string
+  mime: string
+  base64: string
+}
+
+interface FeedbackSendParams {
+  email: string
+  html: string
+  text: string
+  images: FeedbackImage[]
+}
+
+export type { ApiResponse, PageResult, Books, Chapters, BookSaveParams, FeedbackImage, FeedbackSendParams }

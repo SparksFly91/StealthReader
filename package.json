@@ -1,7 +1,7 @@
 {
   "name": "stealthreader",
   "private": true,
-  "version": "0.3.2",
+  "version": "0.3.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,8 +16,13 @@
     "@tauri-apps/plugin-process": "^2.3.1",
     "@tauri-apps/plugin-store": "~2.4.4",
     "@tauri-apps/plugin-updater": "^2.10.1",
+    "@tiptap/extension-image": "^3.31.0",
+    "@tiptap/pm": "^3.31.0",
+    "@tiptap/starter-kit": "^3.31.0",
+    "@tiptap/vue-3": "^3.31.0",
     "axios": "^1.19.0",
     "dayjs": "^1.11.21",
+    "dompurify": "^3.4.14",
     "markdown-it": "^15.0.0",
     "naive-ui": "^2.45.0",
     "pinia": "^4.0.3",

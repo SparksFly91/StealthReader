@@ -46,6 +46,7 @@ import {
   BgColorsOutlined,
   InfoCircleOutlined,
   KeyOutlined,
+  MessageOutlined,
 } from "@vicons/antd"
 
 const router = useRouter()
@@ -55,6 +56,7 @@ const menuItems = [
   { label: "外观", name: "Appearance", href: "#appearance", icon: BgColorsOutlined },
   { label: "阅读设置", name: "ReaderSetting", href: "#reader-setting", icon: BgColorsOutlined },
   { label: "快捷键", name: "Shortcut", href: "#shortcut", icon: KeyOutlined },
+  { label: "意见反馈", name: "Feedback", href: "#feedback", icon: MessageOutlined },
   { label: "关于", name: "About", href: "#about", icon: InfoCircleOutlined },
 ]
 
