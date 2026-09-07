@@ -17,7 +17,7 @@ use lettre::{
 use serde::Deserialize;
 
 /// 反馈配置模板（首次运行自动复制到应用配置目录，真实授权码不随代码提交）
-const EXAMPLE_CONFIG: &str = include_str!("../../feedback.config.example.json");
+const EXAMPLE_CONFIG: &str = include_str!("../../feedback.config.json");
 
 #[derive(Debug, Deserialize)]
 pub struct FeedbackConfig {
