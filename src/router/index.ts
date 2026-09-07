@@ -72,15 +72,6 @@ const routes = [
               title: "关于",
             },
           },
-          {
-            path: "/setting/feedback",
-            name: "Feedback",
-            component: () => import("@/views/setting/Feedback.vue"),
-            meta: {
-              isCache: true,
-              title: "意见反馈",
-            },
-          },
         ],
       },
     ],

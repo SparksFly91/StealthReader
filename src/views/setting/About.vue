@@ -58,6 +58,36 @@
       </div>
     </div>
 
+    <div class="about-section">
+      <div class="section-title">意见反馈</div>
+      <div class="feedback-card">
+        <span class="feedback-icon">
+          <n-icon :component="MailOutlined" :size="16" />
+        </span>
+        <div class="feedback-body">
+          <div class="feedback-title">开发者邮箱</div>
+          <div class="feedback-desc">
+            使用中遇到任何问题，或有功能建议，欢迎通过邮件反馈
+          </div>
+          <div class="feedback-email">
+            <span class="email-text">{{ developerEmail }}</span>
+            <n-button
+              class="copy-btn"
+              size="tiny"
+              secondary
+              round
+              @click="onCopyEmail"
+            >
+              <template #icon>
+                <n-icon :component="CopyOutlined" />
+              </template>
+              复制
+            </n-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="about-footer">
       <span>© {{ year }} Stealth Reader</span>
       <span>Apache-2.0 License</span>
@@ -69,9 +99,11 @@
 import { getVersion } from "@tauri-apps/api/app"
 import {
   BookOutlined,
+  CopyOutlined,
   FileTextOutlined,
   FontColorsOutlined,
   LockOutlined,
+  MailOutlined,
   ScanOutlined,
   SyncOutlined,
   ThunderboltOutlined,
@@ -83,6 +115,32 @@ const message = useMessage()
 const year = new Date().getFullYear()
 const version = ref("")
 const checkingUpdate = ref(false)
+
+// 开发者邮箱：用于接收用户意见反馈
+const developerEmail = "wu434425608@163.com"
+
+// 复制邮箱到剪贴板，失败时降级使用 execCommand
+const onCopyEmail = async () => {
+  try {
+    await navigator.clipboard.writeText(developerEmail)
+    message.success("邮箱已复制到剪贴板")
+    return
+  } catch {
+    // WebView 环境可能禁用异步剪贴板 API，降级处理
+  }
+
+  const input = document.createElement("textarea")
+  input.value = developerEmail
+  input.style.position = "fixed"
+  input.style.opacity = "0"
+  document.body.appendChild(input)
+  input.select()
+  const ok = document.execCommand("copy")
+  document.body.removeChild(input)
+  ok
+    ? message.success("邮箱已复制到剪贴板")
+    : message.error("复制失败，请手动选择邮箱文本复制")
+}
 
 getVersion().then((v) => {
   version.value = v
@@ -338,6 +396,76 @@ const tech = [
   font-size: 13px;
   color: var(--color-text-secondary);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.feedback-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-border-hover);
+    box-shadow: var(--shadow-card);
+  }
+}
+
+.feedback-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  background-color: color-mix(in srgb, #06b6d4 14%, transparent);
+}
+
+.feedback-body {
+  min-width: 0;
+}
+
+.feedback-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.feedback-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.feedback-email {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.email-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+}
+
+.copy-btn {
+  font-weight: 500;
+
+  :deep(.n-button__icon) {
+    margin-right: 4px;
+  }
 }
 
 .about-footer {

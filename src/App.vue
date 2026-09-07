@@ -1,6 +1,6 @@
 <template>
   <n-config-provider :locale="zhCN" :data-locale="dateZhCN" :theme="isDark ? darkTheme : null">
-    <n-message-provider>
+    <n-message-provider :container-style="messageContainerStyle">
       <n-notification-provider>
         <n-dialog-provider>
           <n-modal-provider>
@@ -22,6 +22,9 @@ import { checkAndPrompt } from "@/utils/updater"
 import { useSettingStore } from "@/stores/setting"
 
 const settingStore = useSettingStore()
+
+// 消息弹窗容器下移：默认 top: 20px 会压在 38px 高的自定义标题栏上
+const messageContainerStyle = { top: "56px" }
 
 const media = window.matchMedia("(prefers-color-scheme: dark)")
 const systemDark = ref(media.matches)

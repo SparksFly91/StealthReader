@@ -8,21 +8,12 @@
 
 ### ✨ 新增功能
 
-- **意见反馈**：设置页新增「意见反馈」子页面，可填写反馈人邮箱与富文本反馈内容，支持加粗、斜体、删除线、行内代码、无序/有序列表、标题等格式；可直接**粘贴或拖拽截图**到正文里，单张不超过 2MB、最多 5 张；提交后通过 163 SMTP 以邮件形式发送至维护者邮箱，邮件 `Reply-To` 自动设为反馈人邮箱，收到后点「回复」即可直接回信。
-- **首次运行自动生成反馈配置模板**：未配置 SMTP 时，应用配置目录下会自动生成 `feedback.config.json` 占位模板；内置占位符检测，避免误用模板发件失败。
-- **DOMPurify 内容净化**：富文本提交前经 DOMPurify 过滤，规避脚本注入。
+- **开发者邮箱**：关于页新增「意见反馈」区块，展示开发者邮箱 `wu434425608@163.com`，支持一键复制到剪贴板（异步剪贴板 API 不可用时自动降级）。
 
-### 🚀 工程
+### 🐛 问题修复
 
-- 后端新增 `feedback_send` Tauri 命令与 `send_feedback` SMTP 服务（`lettre` + `multipart/related`），图片以 `cid` 内联方式嵌入邮件，支持 STARTTLS Wrapper 与凭据认证。
-- 前端集成 Tiptap 富文本编辑器（StarterKit + Image），新增 `src/api/feedback.ts` 封装与 `FeedbackImage` 类型。
-- 路由新增 `/setting/feedback`，设置导航增加「意见反馈」入口。
-- SMTP 授权码存放于应用配置目录的 `feedback.config.json`，已加入 `.gitignore`，不随代码提交。
-
-### 📦 依赖
-
-- 新增前端依赖：`@tiptap/vue-3`、`@tiptap/starter-kit`、`@tiptap/extension-image`、`@tiptap/pm`、`dompurify`
-- 新增 Rust 依赖：`lettre`、`base64`
+- **窗口圆角透白**：移除主布局容器上的 `backdrop-filter`，修复透明窗口下圆角外侧出现的灰色直角残影。
+- **窗口阴影直角边线**：Windows 的 DWM 原生阴影只能作用于矩形窗口，无法跟随 CSS 圆角。改为关闭系统阴影，圆角与阴影统一由 CSS `box-shadow` 绘制，并给窗口内容留出透明边距，呈现悬浮卡片效果。
 
 ---
 
