@@ -24,6 +24,15 @@ pub fn run() {
                     .expect("sqlite数据库连接池初始化失败!")
             });
             app.manage(pool);
+
+            // Windows 11 下 DWM 会默认给顶层窗口裁一个约 8px 的系统圆角，
+            // 与前端 CSS 的 12px 圆角不一致时，两段弧线之间会露出一圈透明留白。
+            // 这里关闭系统圆角，让窗口边界完全由前端 CSS 圆角决定。
+            #[cfg(target_os = "windows")]
+            if let Some(window) = app.get_webview_window("main") {
+                disable_system_rounded_corners(&window);
+            }
+
             Ok(())
         })
         .plugin(tauri_plugin_store::Builder::default().build())
@@ -43,4 +52,26 @@ fn prevent_default() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 #[cfg(not(debug_assertions))]
 fn prevent_default() -> tauri::plugin::TauriPlugin<tauri::Wry> {
     tauri_plugin_prevent_default::init()
+}
+
+/// 关闭 Windows 11 的系统默认圆角（DWM 裁剪），避免与前端 CSS 圆角之间出现透明缝隙
+#[cfg(target_os = "windows")]
+fn disable_system_rounded_corners(window: &tauri::WebviewWindow) {
+    use windows::Win32::Graphics::Dwm::{
+        DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_DONOTROUND, DwmSetWindowAttribute,
+    };
+
+    if let Ok(hwnd) = window.hwnd() {
+        let preference = DWMWCP_DONOTROUND;
+        unsafe {
+            if let Err(e) = DwmSetWindowAttribute(
+                hwnd,
+                DWMWA_WINDOW_CORNER_PREFERENCE,
+                &preference as *const _ as *const std::ffi::c_void,
+                std::mem::size_of_val(&preference) as u32,
+            ) {
+                eprintln!("关闭系统圆角失败: {e}");
+            }
+        }
+    }
 }

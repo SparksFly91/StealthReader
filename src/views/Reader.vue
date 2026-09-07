@@ -1,11 +1,12 @@
 <template>
-  <div
-    class="glass-panel"
-    :style="readerStyle"
-    data-tauri-drag-region
-    @mousedown="onWindowMouseDown"
-    @contextmenu.prevent="onContextMenu"
-  >
+  <div class="reader-shell" :class="{ 'with-shadow': settingStore.reader.showShadow }">
+    <div
+      class="glass-panel"
+      :style="readerStyle"
+      data-tauri-drag-region
+      @mousedown="onWindowMouseDown"
+      @contextmenu.prevent="onContextMenu"
+    >
     <div class="reading-wrap">
       <div class="chapter-name" :class="{ 'chapter-name--hidden': currentPage !== 0 }">
         {{ chapter?.title || "加载中..." }}
@@ -93,6 +94,7 @@
         </div>
       </div>
     </n-popover>
+    </div>
   </div>
 </template>
 
@@ -298,7 +300,8 @@ const switchChapter = async (offset: number) => {
 onMounted(() => {
   window.addEventListener("keydown", onKeydown)
   window.addEventListener("resize", onResize)
-  appWindow.setShadow(settingStore.reader.showShadow)
+  // 阴影统一由 CSS box-shadow 呈现，关闭 OS 原生阴影（DWM 阴影只会是直角）
+  appWindow.setShadow(false)
   appWindow.setSize(new LogicalSize(settingStore.reader.windowWidth, settingStore.reader.windowHeight))
   loadChapter()
 })
@@ -306,17 +309,33 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown)
   window.removeEventListener("resize", onResize)
-  // 离开阅读模式时，恢复主窗口的阴影设置
-  appWindow.setShadow(settingStore.appearance.showShadow)
+  // 离开阅读模式时，恢复主窗口（同样禁用 OS 阴影，交给 CSS）
+  appWindow.setShadow(false)
 })
 </script>
 
 <style scoped>
+.reader-shell {
+  width: 100vw;
+  height: 100vh;
+  padding: var(--window-gap);
+  box-sizing: border-box;
+  background: transparent;
+
+  &.with-shadow {
+    .glass-panel {
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.22),
+        0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
 .glass-panel {
   position: relative;
   box-sizing: border-box;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background: var(--reader-background-color);
   border-radius: var(--radius-window);
   /* border: 1px solid rgba(255, 255, 255, 0.2); */

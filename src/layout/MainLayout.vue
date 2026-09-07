@@ -1,15 +1,15 @@
 <template>
-  <n-space vertical size="large" class="container">
-    <n-layout>
-      <n-layout-header class="header">
+  <div class="window-shell" :class="{ 'with-shadow': settingStore.appearance.showShadow }">
+    <div class="window-card">
+      <header class="header">
         <MacTitleBar v-if="isMacos" />
         <WindowsTitleBar v-else />
-      </n-layout-header>
-      <n-layout-content class="content"> 
+      </header>
+      <main class="content">
         <RouterView />
-      </n-layout-content>
-    </n-layout>
-  </n-space>
+      </main>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -24,33 +24,48 @@ const appWindow = getCurrentWindow()
 const settingStore = useSettingStore()
 
 onMounted(() => {
-  // 从阅读模式返回时，恢复主窗口的阴影设置（避免停留在阅读器的阴影状态）
-  appWindow.setShadow(settingStore.appearance.showShadow)
+  // 窗口阴影完全由 CSS box-shadow 呈现（跟随圆角），
+  // 因此始终关闭 OS 原生阴影（DWM 阴影只会是直角，无法跟随 CSS 圆角）。
+  appWindow.setShadow(false)
 })
 </script>
 
 <style lang="scss" scoped>
-.container {
+.window-shell {
   width: 100vw;
   height: 100vh;
-  background: var(--color-window-bg);
-  backdrop-filter: blur(20px);
-  border-radius: var(--radius-window);
-  overflow: hidden;
-  // border: 1px solid var(--color-border);
+  padding: var(--window-gap);
+  box-sizing: border-box;
+  background: transparent;
 
-  :deep(.n-layout) {
-    background: transparent;
+  &.with-shadow {
+    .window-card {
+      box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.16),
+        0 1px 4px rgba(0, 0, 0, 0.08);
+    }
   }
 }
 
+.window-card {
+  width: 100%;
+  height: 100%;
+  background: var(--color-window-bg);
+  border-radius: var(--radius-window);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .header {
+  flex-shrink: 0;
   padding: 0;
   background: transparent;
 }
 
 .content {
+  flex: 1;
+  min-height: 0;
   background: transparent;
-  height: calc(100vh - var(--titlebar-height));
 }
 </style>

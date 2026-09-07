@@ -29,6 +29,8 @@
 
   /* 尺寸 */
   --titlebar-height: 38px;
+  /* 浮窗式窗口：内容四周留出的透明边距（供 CSS 阴影落地、透出桌面） */
+  --window-gap: 12px;
 
   --set-item-title-size: 14px;
   --set-item-desc-size: 12px;

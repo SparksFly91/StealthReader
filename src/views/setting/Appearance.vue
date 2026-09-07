@@ -30,7 +30,6 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useSettingStore } from '@/stores/setting'
 
 const settingStore = useSettingStore()
@@ -44,7 +43,6 @@ watch(theme, (newVal) => {
 
 watch(showShadow, (newVal) => {
   settingStore.appearance.showShadow = newVal
-  getCurrentWindow().setShadow(newVal)
 })
 </script>
 
