@@ -1,16 +1,25 @@
 import { createRouter, createWebHistory } from "vue-router"
+import MainLayout from "@/layout/MainLayout.vue"
+import Home from "@/views/Home.vue"
+import BookDetail from "@/views/BookDetail.vue"
+import Setting from "@/views/Setting.vue"
+import Appearance from "@/views/setting/Appearance.vue"
+import ReaderSetting from "@/views/setting/ReaderSetting.vue"
+import Shortcut from "@/views/setting/Shortcut.vue"
+import About from "@/views/setting/About.vue"
+import Reader from "@/views/Reader.vue"
 
 const routes = [
   {
     path: "/",
     name: "MainLayout",
-    component: () => import("@/layout/MainLayout.vue"),
+    component: MainLayout,
     redirect: "/home",
     children: [
       {
         path: "/home",
         name: "Home",
-        component: () => import("@/views/Home.vue"),
+        component: Home,
         meta: {
           isCache: true,
           title: "首页",
@@ -19,7 +28,7 @@ const routes = [
       {
         path: "/book-detail",
         name: "BookDetail",
-        component: () => import("@/views/BookDetail.vue"),
+        component: BookDetail,
         meta: {
           isCache: true,
           title: "书籍详情",
@@ -29,7 +38,7 @@ const routes = [
       {
         path: "/setting",
         name: "Setting",
-        component: () => import("@/views/Setting.vue"),
+        component: Setting,
         redirect: "/setting/appearance",
         meta: {
           isCache: true,
@@ -39,7 +48,7 @@ const routes = [
           {
             path: "/setting/appearance",
             name: "Appearance",
-            component: () => import("@/views/setting/Appearance.vue"),
+            component: Appearance,
             meta: {
               isCache: true,
               title: "外观设置",
@@ -48,7 +57,7 @@ const routes = [
           {
             path: "/setting/reader-setting",
             name: "ReaderSetting",
-            component: () => import("@/views/setting/ReaderSetting.vue"),
+            component: ReaderSetting,
             meta: {
               isCache: true,
               title: "阅读设置",
@@ -57,7 +66,7 @@ const routes = [
           {
             path: "/setting/shortcut",
             name: "Shortcut",
-            component: () => import("@/views/setting/Shortcut.vue"),
+            component: Shortcut,
             meta: {
               isCache: true,
               title: "快捷键",
@@ -66,7 +75,7 @@ const routes = [
           {
             path: "/setting/about",
             name: "About",
-            component: () => import("@/views/setting/About.vue"),
+            component: About,
             meta: {
               isCache: true,
               title: "关于",
@@ -79,7 +88,7 @@ const routes = [
   {
     path: "/reader",
     name: "Reader",
-    component: () => import("@/views/Reader.vue"),
+    component: Reader,
     meta: {
       isCache: true,
       title: "阅读器",

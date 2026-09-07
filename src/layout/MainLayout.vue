@@ -6,7 +6,9 @@
         <WindowsTitleBar v-else />
       </header>
       <main class="content">
-        <RouterView />
+        <Suspense>
+          <RouterView />
+        </Suspense>
       </main>
     </div>
   </div>

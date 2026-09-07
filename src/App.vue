@@ -6,7 +6,9 @@
           <n-modal-provider>
             <GlobalLoading />
             <UpdateModal />
-            <RouterView />
+            <Suspense>
+              <RouterView />
+            </Suspense>
           </n-modal-provider>
         </n-dialog-provider>
       </n-notification-provider>

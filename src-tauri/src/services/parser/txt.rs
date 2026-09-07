@@ -1,30 +1,18 @@
+//! TXT 纯文本解析：自动识别编码，按正则切章节
+//!
+//! 与原 `parser.rs` 行为保持一致，仅迁移到子模块。
+
 use std::path::Path;
 use std::sync::LazyLock;
 
 use chardetng::{EncodingDetector, Iso2022JpDetection, Utf8Detection};
 use regex::Regex;
 
+use super::{ParsedBook, ParsedChapter};
+
 static CHAPTER_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?m)^[ \t]*(第[0-9一二三四五六七八九十百千万零两]+[章节回卷集部篇][^\n]*|Chapter\s+\d+[^\n]*|楔子|序章|前言|引子|后记|尾声|番外[^\n]*)\s*$").unwrap()
 });
-
-#[derive(Debug, Clone)]
-pub struct ParsedChapter {
-    pub number: i32,
-    pub title: String,
-    pub content: String,
-    pub total_chars: i32,
-}
-
-#[derive(Debug, Clone)]
-pub struct ParsedBook {
-    pub title: String,
-    pub author: String,
-    pub introduction: String,
-    pub total_chapters: i32,
-    pub total_chars: i32,
-    pub chapters: Vec<ParsedChapter>,
-}
 
 /// 读取文件内容，自动识别编码并解码为 UTF-8 字符串
 pub fn read_to_string(path: &str) -> Result<String, String> {
@@ -39,8 +27,8 @@ pub fn read_to_string(path: &str) -> Result<String, String> {
     Ok(text.into_owned())
 }
 
-/// 解析小说文件，返回书籍信息与章节列表
-pub fn parse_book(file_path: &str) -> Result<ParsedBook, String> {
+/// 解析 TXT 小说文件，返回书籍信息与章节列表
+pub fn parse(file_path: &str) -> Result<ParsedBook, String> {
     let text = read_to_string(file_path)?;
     if text.trim().is_empty() {
         return Err("文件内容为空".to_string());
@@ -101,5 +89,6 @@ pub fn parse_book(file_path: &str) -> Result<ParsedBook, String> {
         total_chapters,
         total_chars,
         chapters,
+        cover_path: None,
     })
 }

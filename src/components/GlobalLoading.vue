@@ -26,8 +26,8 @@ const text = computed(() => store.text)
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(2px);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .global-loading-box {

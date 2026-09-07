@@ -41,13 +41,17 @@ pub async fn book_import(
 
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
 
+    // 封面：EPUB 解析可能输出本地缓存路径；TXT 解析始终为空字符串。
+    let cover = parsed.cover_path.clone().unwrap_or_default();
+
     let result = sqlx::query(
-        "INSERT INTO books (title, author, introduction, file_path, total_chapters, total_chars) VALUES (?,?,?,?,?,?)",
+        "INSERT INTO books (title, author, introduction, file_path, cover, total_chapters, total_chars) VALUES (?,?,?,?,?,?,?)",
     )
     .bind(&parsed.title)
     .bind(&parsed.author)
     .bind(&parsed.introduction)
     .bind(&path)
+    .bind(&cover)
     .bind(parsed.total_chapters)
     .bind(parsed.total_chars)
     .execute(&mut *tx)

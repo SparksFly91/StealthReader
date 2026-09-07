@@ -42,6 +42,9 @@ chardetng = "1.0.0"
 tauri-plugin-updater = "2.10.1"
 tauri-plugin-process = "2.3.1"
 tauri-plugin-prevent-default = "5.0.2"
+# EPUB 解析：zip 解压 + quick-xml 解析 container.xml / OPF / 各章节 XHTML
+zip = { version = "2", default-features = false, features = ["deflate"] }
+quick-xml = "0.36"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.61.3", features = ["Win32_Foundation", "Win32_Graphics_Dwm"] }
